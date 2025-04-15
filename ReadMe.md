@@ -24,4 +24,11 @@ RealTime-Memory:
 - registry for Objects: {ObjectId: Object}
 - registry for attachements to Objects {Object, path, Object}
 
+Root:
+- need to know which objects to display first
+- options:
+  - define root is id 1
+  - add root tag to model (probably best)
+  - no root but search
+
 ### UI
