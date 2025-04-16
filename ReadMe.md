@@ -32,3 +32,20 @@ Root:
   - no root but search
 
 ### UI
+
+Top: DB-Connection, some Settings, info etc.
+
+Left: Selection Objects, favorites, Search etc. (similair to VS-Code)
+
+Main: Dynamic diyplay of Object with Attributes and Methods
+
+Opt. Right: AI-Assistant
+
+### Routing
+for now: Generally one database is Selected (later: add authentication etc, for desktop add managing Connections locally)
+
+web-assembly-server-host/ -> search Tab
+
+web-assembly-server-host/{ObjectId}/ -> display the Object
+
+web-assembly-server-host/{ObjectId}/**{some Pathing}/ -> display object routed to, navigation uses such Paths
