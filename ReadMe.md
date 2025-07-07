@@ -2,6 +2,10 @@
 
 A tool to allow usage of Programmatic features in daily life, and demonstrate advantages of unified systems
 
+## Setup
+
+docker compose up -d
+
 ## Concept
 
 ### Data

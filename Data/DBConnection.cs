@@ -17,30 +17,12 @@ class DBConnection
         this.connection.Close();
     }
 
-    public void SetRootObject(int id)
-    {
-        var setRootCmd = new NpgsqlCommand(
-            "UPDATE \"Object\" SET \"root\" = TRUE WHERE \"id\" = @id;", this.connection);
-        setRootCmd.Parameters.AddWithValue("id", id);
-        setRootCmd.ExecuteNonQuery();
-    }
-
     public int CreateObject(string Class, string Data)
     {
         var createCmd = new NpgsqlCommand(
         "INSERT INTO \"Object\" (\"class\", \"data\") VALUES (@class, @data) RETURNING \"id\";", this.connection);
         createCmd.Parameters.AddWithValue("class", Class);
         createCmd.Parameters.AddWithValue("data", Data);
-        var objectId = (int)createCmd.ExecuteScalar();
-        return objectId;
-    }
-    public int CreateObject(int id, string Class, string Data)
-    {
-        var createCmd = new NpgsqlCommand(
-        "INSERT INTO \"Object\" (\"class\", \"data\") VALUES (@id, @class, @data);", this.connection);
-        createCmd.Parameters.AddWithValue("class", Class);
-        createCmd.Parameters.AddWithValue("data", Data);
-        createCmd.Parameters.AddWithValue("id", id);
         var objectId = (int)createCmd.ExecuteScalar();
         return objectId;
     }
