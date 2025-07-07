@@ -32,15 +32,39 @@ RealTime-Memory:
 - registry for Objects: {ObjectId: Object}
 - registry for attachements to Objects {Object, path, Object}
 
-### UI
+### Frontend
 
-Top: DB-Connection, some Settings, info etc.
+Optimaly Server only provides the Data Objects and UI is built locally, also you could connect to multiple sources allowing search over multiple as well
 
-Left: Selection Objects, favorites, Search etc. (similair to VS-Code)
+For easier implementation and compatibility the server provides UI here (compromise)
 
-Main: Dynamic diyplay of Object with Attributes and Methods
+maybe create local variant as well, to allow better managing of multiple objects, sources and local data like settings, favorites, git and AI-chats
+
+**Browser-variant**
+
+perspective from the server, similair to admin-panel (not focused on user)
+
+DB-Connection fixed in providing server (if auth, then on accessing the UI-Server already)
+
+Main: Dynamic display of Object with Attributes and Methods
 
 Opt. Right: AI-Assistant
+
+some buttons for new, search, settings
+
+**Local Variant**
+
+perspective from User
+
+DB-Connections can be managed, with auth etc.
+
+Left: manage connections, Git, settings
+
+Main: Dynamic display of Object with Attributes and Methods
+
+Opt. Right: AI-Assistant
+
+some buttons for new, search, settings
 
 ### Routing
 

@@ -1,16 +1,14 @@
 ﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+@using BlazorStrap.V5
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+<BSContainer>
+    <!-- Main content -->
+    <BSContainer>
+        @Body
+    </BSContainer>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+    <!-- Sidebar AI Chat -->
+    @* <BSContainer Class="border-start bg-light p-3" Style="width: 300px;">
+        <AICHat />
+    </BSContainer> *@
+</BSContainer>
