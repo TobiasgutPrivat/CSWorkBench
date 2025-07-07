@@ -1,6 +1,7 @@
 using Npgsql;
 
-class DBConnection {
+class DBConnection
+{
     // Handles all SQL operations
 
     private NpgsqlConnection connection;
@@ -16,19 +17,8 @@ class DBConnection {
         this.connection.Close();
     }
 
-    public List<int> GetRootObjects() {
-        var readCmd = new NpgsqlCommand(
-            "SELECT \"id\" FROM \"Object\" WHERE \"root\";", this.connection);
-        using var reader = readCmd.ExecuteReader();
-        List<int> rootObjects = new List<int>();
-        while (reader.Read())
-        {
-            rootObjects.Add(reader.GetInt32(0));
-        }
-        return rootObjects;
-    }
-
-    public void SetRootObject(int id) {
+    public void SetRootObject(int id)
+    {
         var setRootCmd = new NpgsqlCommand(
             "UPDATE \"Object\" SET \"root\" = TRUE WHERE \"id\" = @id;", this.connection);
         setRootCmd.Parameters.AddWithValue("id", id);
@@ -71,10 +61,13 @@ class DBConnection {
             "SELECT \"class\", \"data\" FROM \"Object\" WHERE \"id\" = @id;", this.connection);
         readCmd.Parameters.AddWithValue("id", objectId);
         using var reader = readCmd.ExecuteReader();
-        if (reader.Read()) {
+        if (reader.Read())
+        {
             Class = reader.GetString(0);
             data = reader.GetString(1);
-        } else {
+        }
+        else
+        {
             throw new Exception($"Object with ID {objectId} not found.");
         }
     }
