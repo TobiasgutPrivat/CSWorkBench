@@ -1,5 +1,4 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 class Registry(DBConnection db)
 {
@@ -7,15 +6,16 @@ class Registry(DBConnection db)
     Dictionary<int, object> Objects = [];
     Dictionary<object, int> ObjectIds = [];
     Dictionary<object, List<Attachement>> Attachements = [];
-    JsonSerializerOptions options = new JsonSerializerOptions
+    JsonSerializerSettings options = new JsonSerializerSettings
     {
-        ReferenceHandler = ReferenceHandler.Preserve, // for recursion
-        WriteIndented = true
+        PreserveReferencesHandling = PreserveReferencesHandling.All,
+        ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
+        Formatting = Formatting.Indented
     };
 
     public void SaveObject(object obj)
     {
-        string jsonData = JsonSerializer.Serialize(obj, options);
+        string jsonData = JsonConvert.SerializeObject(obj, options);
         if (ObjectIds.TryGetValue(obj, out int id))
         {
             db.UpdateObject(id, jsonData);
@@ -74,7 +74,7 @@ class Registry(DBConnection db)
         {
             db.GetObject(id, out string className, out string data);
             Type type = Type.GetType(className) ?? throw new Exception($"Type {className} not found.");
-            object obj = JsonSerializer.Deserialize(data, type, options) ?? throw new Exception($"Object with ID {id} not found.");
+            object obj = JsonConvert.DeserializeObject(data, type, options) ?? throw new Exception($"Object with ID {id} not found.");
             Objects[id] = obj;
             ObjectIds[obj] = id;
             return obj;
