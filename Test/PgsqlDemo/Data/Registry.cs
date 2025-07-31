@@ -3,9 +3,16 @@ using Newtonsoft.Json;
 class Registry(DBConnection db)
 {
     //local Memory storage connected to one database.
+
+    // in registry means in DB 1:1
+    // delaying commmiting like in git could be added (runtime sessions)
+    // user management could be added    
+
     Dictionary<int, object> Objects = [];
-    Dictionary<object, int> ObjectIds = [];
-    Dictionary<object, List<Attachement>> Attachements = [];
+    public Dictionary<object, int> ObjectIds = [];
+    Dictionary<Tuple<object, string, string>, object> Attachements = []; // parent, path, name, object
+    Dictionary<object, List<Tuple<object, string, string>>> AttachementIds = [];
+
     JsonSerializerSettings options = new JsonSerializerSettings
     {
         PreserveReferencesHandling = PreserveReferencesHandling.All,
@@ -28,39 +35,23 @@ class Registry(DBConnection db)
         }
     }
 
-    public void CreateAttachment(object parent, string path, string name, object obj)
+    public object DeleteObject(object obj)
     {
-        if (ObjectIds.TryGetValue(parent, out int parentId) && ObjectIds.TryGetValue(obj, out int objId))
+        if (ObjectIds.TryGetValue(obj, out int id))
         {
-            db.CreateAttachment(parentId, path, name, objId);
-            if (!Attachements.ContainsKey(parent))
+            if (AttachementIds.TryGetValue(obj, out List<Tuple<object, string, string>>? attachments))
             {
-                Attachements[parent] = [];
+                attachments.ForEach(x => Attachements.Remove(x));
+                AttachementIds.Remove(obj);
             }
-            Attachements[parent].Add(new Attachement(path, name, obj));
+            db.DeleteObject(id); // also deletes attachements in DB
+            Objects.Remove(id);
+            ObjectIds.Remove(obj);
+            return obj;
         }
         else
         {
-            throw new Exception("Parent object not found in registry.");
-        }
-    }
-
-    public void DeleteAttachment(object parent, string path, string name)
-    {
-        if (Attachements.TryGetValue(parent, out List<Attachement> attachments))
-        {
-            attachments.ForEach(a =>
-            {
-                if (a.Path == path && a.Name == name)
-                {
-                    db.DeleteAttachment(ObjectIds[parent], path, name);
-                    attachments.Remove(a);
-                }
-            });
-        }
-        else
-        {
-            throw new Exception("Parent object not found in registry.");
+            throw new Exception("Object not stored in DB.");
         }
     }
 
@@ -81,17 +72,57 @@ class Registry(DBConnection db)
         }
     }
 
-    public List<Attachement> GetAttachments(object parent)
+    public void CreateAttachment(object parent, string path, string name, object obj)
     {
-        if (Attachements.TryGetValue(parent, out List<Attachement> attachments))
+        SaveObject(parent);
+        List<Tuple<object, string, string>> attachmentIds = GetAttachmentIds(parent);
+
+        if (attachmentIds.Any(x => x.Item2 == path && x.Item3 == name))
         {
-            return attachments;
+            throw new Exception("Attachment already exists.");
         }
-        else
+        if (ObjectIds.TryGetValue(obj, out int id))
         {
-            throw new Exception("Parent object not found in registry.");
+
         }
+        SaveObject(obj);
+        db.CreateAttachment(ObjectIds[parent], path, name, ObjectIds[obj]);
+        Tuple<object, string, string> attachmentId = Tuple.Create(parent, path, name);
+
+        Attachements[attachmentId] = obj;
+        attachmentIds.Add(attachmentId);
     }
 
-    public int GetObjectId(object obj) => ObjectIds[obj];
+    public void DeleteAttachment(object parent, string path, string name)
+    {
+        Tuple<object, string, string> attachmentId = Tuple.Create(parent, path, name);
+        Attachements.Remove(attachmentId);
+        AttachementIds[parent].Remove(attachmentId);
+        db.DeleteAttachment(ObjectIds[parent], path, name);
+    }
+
+    public List<Tuple<string, string, object>> GetAttachments(object parent)
+    {
+        return GetAttachmentIds(parent).Select(x => Tuple.Create(x.Item2, x.Item3, Attachements[x])).ToList();
+    }
+
+    public List<Tuple<object, string, string>> GetAttachmentIds(object parent)
+    {
+        SaveObject(parent);
+        if (!AttachementIds.TryGetValue(parent, out List<Tuple<object, string, string>>? value)) // check if loaded from DB
+        {
+            value = [];
+            int id = ObjectIds[parent];
+            // load from DB
+            List<Tuple<string, string, int>> attachments = db.GetAttachments(id);
+            foreach (Tuple<string, string, int> attachment in attachments)
+            {
+                Tuple<object, string, string> attachmentId = Tuple.Create(parent, attachment.Item1, attachment.Item2);
+                Attachements[attachmentId] = GetObject(attachment.Item3);
+                value.Add(attachmentId);
+            }
+            AttachementIds[parent] = value;
+        }
+        return value;
+    }
 }
