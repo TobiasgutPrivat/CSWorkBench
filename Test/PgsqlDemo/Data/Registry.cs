@@ -10,8 +10,8 @@ class Registry(DBConnection db)
 
     Dictionary<int, object> Objects = [];
     public Dictionary<object, int> ObjectIds = [];
-    Dictionary<Tuple<object, string, string>, object> Attachements = []; // parent, path, name, object
-    Dictionary<object, List<Tuple<object, string, string>>> AttachementIds = [];
+    Dictionary<AttachmentId, object> Attachements = []; // parent, path, name, object
+    Dictionary<object, List<AttachmentId>> AttachementIds = [];
 
     JsonSerializerSettings options = new JsonSerializerSettings
     {
@@ -39,7 +39,7 @@ class Registry(DBConnection db)
     {
         if (ObjectIds.TryGetValue(obj, out int id))
         {
-            if (AttachementIds.TryGetValue(obj, out List<Tuple<object, string, string>>? attachments))
+            if (AttachementIds.TryGetValue(obj, out List<AttachmentId>? attachments))
             {
                 attachments.ForEach(x => Attachements.Remove(x));
                 AttachementIds.Remove(obj);
@@ -75,7 +75,7 @@ class Registry(DBConnection db)
     public void CreateAttachment(object parent, string path, string name, object obj)
     {
         SaveObject(parent);
-        List<Tuple<object, string, string>> attachmentIds = GetAttachmentIds(parent);
+        List<AttachmentId> attachmentIds = GetAttachmentIds(parent);
 
         if (attachmentIds.Any(x => x.Item2 == path && x.Item3 == name))
         {
@@ -87,7 +87,7 @@ class Registry(DBConnection db)
         }
         SaveObject(obj);
         db.CreateAttachment(ObjectIds[parent], path, name, ObjectIds[obj]);
-        Tuple<object, string, string> attachmentId = Tuple.Create(parent, path, name);
+        AttachmentId attachmentId = new AttachmentId(parent, path, name);
 
         Attachements[attachmentId] = obj;
         attachmentIds.Add(attachmentId);
@@ -95,7 +95,7 @@ class Registry(DBConnection db)
 
     public void DeleteAttachment(object parent, string path, string name)
     {
-        Tuple<object, string, string> attachmentId = Tuple.Create(parent, path, name);
+        AttachmentId attachmentId = new AttachmentId(parent, path, name);
         Attachements.Remove(attachmentId);
         AttachementIds[parent].Remove(attachmentId);
         db.DeleteAttachment(ObjectIds[parent], path, name);
@@ -106,10 +106,10 @@ class Registry(DBConnection db)
         return GetAttachmentIds(parent).Select(x => Tuple.Create(x.Item2, x.Item3, Attachements[x])).ToList();
     }
 
-    public List<Tuple<object, string, string>> GetAttachmentIds(object parent)
+    public List<AttachmentId> GetAttachmentIds(object parent)
     {
         SaveObject(parent);
-        if (!AttachementIds.TryGetValue(parent, out List<Tuple<object, string, string>>? value)) // check if loaded from DB
+        if (!AttachementIds.TryGetValue(parent, out List<AttachmentId>? value)) // check if loaded from DB
         {
             value = [];
             int id = ObjectIds[parent];
@@ -117,7 +117,7 @@ class Registry(DBConnection db)
             List<Tuple<string, string, int>> attachments = db.GetAttachments(id);
             foreach (Tuple<string, string, int> attachment in attachments)
             {
-                Tuple<object, string, string> attachmentId = Tuple.Create(parent, attachment.Item1, attachment.Item2);
+                AttachmentId attachmentId = new AttachmentId(parent, attachment.Item1, attachment.Item2);
                 Attachements[attachmentId] = GetObject(attachment.Item3);
                 value.Add(attachmentId);
             }
@@ -126,3 +126,5 @@ class Registry(DBConnection db)
         return value;
     }
 }
+
+class AttachmentId(object parent, string path, string name) : Tuple<object, string, string>(parent, path, name) { };

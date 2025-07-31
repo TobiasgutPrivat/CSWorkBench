@@ -19,7 +19,7 @@ Console.WriteLine(recoveredPerson.children[0].Name);
 Person person2 = new Person("John", 30); // for attaching
 registry.CreateAttachment(person, "", "friend1", person2);
 // 4. read Attachements
-List<Tuple<object, string, string>> attachments = registry2.GetAttachmentIds(recoveredPerson);
+List<AttachmentId> attachments = registry2.GetAttachmentIds(recoveredPerson);
 Console.WriteLine(attachments[0].Item3);
 // 5. delete Objects/Attachements
 registry.DeleteObject(person);
