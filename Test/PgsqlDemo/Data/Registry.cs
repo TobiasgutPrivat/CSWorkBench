@@ -13,11 +13,13 @@ class Registry(DBConnection db)
     Dictionary<AttachmentId, object> Attachements = []; // parent, path, name, object
     Dictionary<object, List<AttachmentId>> AttachementIds = [];
 
-    JsonSerializerSettings options = new JsonSerializerSettings
+    private static readonly JsonSerializerSettings options = new JsonSerializerSettings
     {
         PreserveReferencesHandling = PreserveReferencesHandling.All,
         ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-        Formatting = Formatting.Indented
+        TypeNameHandling = TypeNameHandling.All,
+        ContractResolver = new FullAccessContractResolver(),
+        Formatting = Formatting.Indented,
     };
 
     public void SaveObject(object obj)

@@ -1,0 +1,25 @@
+{
+  "$id": "1",
+  "$type": "Person, PgsqlDemo",
+  "children": {
+    "$id": "2",
+    "$type": "System.Collections.Generic.List`1[[Child, PgsqlDemo]], System.Private.CoreLib",
+    "$values": [
+      {
+        "$id": "3",
+        "$type": "Child, PgsqlDemo",
+        "Parent": {
+          "$ref": "1"
+        },
+        "FavoriteToy": null,
+        "children": {
+          "$id": "4",
+          "$type": "System.Collections.Generic.List`1[[Child, PgsqlDemo]], System.Private.CoreLib",
+          "$values": []
+        }
+      }
+    ]
+  },
+  "Name": "John",
+  "Age": 30
+}

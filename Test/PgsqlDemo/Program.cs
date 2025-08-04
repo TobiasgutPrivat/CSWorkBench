@@ -10,11 +10,11 @@ person.children.Add(child); // for recursion
 
 // 1. serialize Objects
 registry.SaveObject(person);
+registry.SaveObject(child);
 // 2. recreate Objects
 Registry registry2 = new Registry(connection); //simulates restart
 Person recoveredPerson = (Person)registry2.GetObject(registry.ObjectIds[person]);
-Console.WriteLine(recoveredPerson.Name);
-Console.WriteLine(recoveredPerson.children[0].Name);
+Person recoveredChild = (Person)registry2.GetObject(registry.ObjectIds[child]);
 // 3. store Attachements
 Person person2 = new Person("John", 30); // for attaching
 registry.CreateAttachment(person, "", "friend1", person2);

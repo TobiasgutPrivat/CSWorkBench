@@ -1,8 +1,8 @@
 class Person
 {
-    public string Name { get; set; }
-    public int Age { get; set; }
-    public List<Child> children { get; set; } = new List<Child>();
+    private string Name;
+    private int Age;
+    public List<Child> children = new List<Child>();
 
     public Person(string name, int age)
     {
@@ -13,8 +13,8 @@ class Person
 
 class Child : Person
 {
-    public Person Parent { get; set; }
-    public string? FavoriteToy { get; set; }
+    public Person Parent;
+    public string? FavoriteToy;
 
     public Child(string name, int age, Person parent) : base(name, age)
     {
