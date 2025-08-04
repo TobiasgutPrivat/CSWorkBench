@@ -3,8 +3,8 @@
 DBConnection connection = new DBConnection(ConnString);
 Registry registry = new Registry(connection);
 
-Person person = new Person("John", 30);
-Child child = new Child("Andrew", 10, person);
+Person person = new Person() { Name = "John", Age = 30 };
+Child child = new Child() { Name = "Andrew", Age = 10, Parent = person, FavoriteToy = null };
 person.children.Add(child); // for recursion
 
 
@@ -16,8 +16,8 @@ Registry registry2 = new Registry(connection); //simulates restart
 Person recoveredPerson = (Person)registry2.GetObject(registry.ObjectIds[person]);
 Person recoveredChild = (Person)registry2.GetObject(registry.ObjectIds[child]);
 // 3. store Attachements
-Person person2 = new Person("John", 30); // for attaching
-registry.CreateAttachment(person, "", "friend1", person2);
+// Person person2 = new Person("John", 30); // for attaching
+// registry.CreateAttachment(person, "", "friend1", person2);
 // 4. read Attachements
 List<AttachmentId> attachments = registry2.GetAttachmentIds(recoveredPerson);
 Console.WriteLine(attachments[0].Item3);

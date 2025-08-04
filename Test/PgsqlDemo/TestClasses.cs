@@ -1,23 +1,17 @@
 class Person
 {
-    private string Name;
-    private int Age;
-    public List<Child> children = new List<Child>();
+    public string Name { get; set; }
+    public int Age { get; set; }
+    public List<Child> children { get; set; } = new List<Child>();
 
-    public Person(string name, int age)
-    {
-        this.Name = name;
-        this.Age = age;
-    }
+    // public Person(string name, int age) => (Name, Age) = (name, age);
+
 }
 
 class Child : Person
 {
-    public Person Parent;
-    public string? FavoriteToy;
+    public Person Parent { get; set; }
+    public string? FavoriteToy { get; set; }
 
-    public Child(string name, int age, Person parent) : base(name, age)
-    {
-        this.Parent = parent;
-    }
+    // public Child(string name, int age, Person parent, string? favoriteToy) : base(name, age) => (Parent, FavoriteToy) = (parent, favoriteToy);
 }

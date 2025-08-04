@@ -17,7 +17,7 @@ class Registry(DBConnection db)
     {
         PreserveReferencesHandling = PreserveReferencesHandling.All,
         ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-        TypeNameHandling = TypeNameHandling.All,
+        // TypeNameHandling = TypeNameHandling.All,
         ContractResolver = new FullAccessContractResolver(),
         Formatting = Formatting.Indented,
     };
