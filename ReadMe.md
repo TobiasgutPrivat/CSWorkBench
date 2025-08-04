@@ -2,6 +2,8 @@
 
 A tool to allow usage of Programmatic features in daily life, and demonstrate advantages of unified systems
 
+Compromises to a optimal IT-Environment are tagged with (compromise)
+
 ## Setup
 
 docker compose up -d
@@ -30,13 +32,14 @@ RealTime-Memory:
 
 - registry for ObjectIds: {Object: ObjectId}
 - registry for Objects: {ObjectId: Object}
-- registry for attachements to Objects {Object, path, Object}
+- registry for attachements {<Object, path, name>, Object} used to track what object is at a specific path
+- registry for attachementIds {Object, [<Object, path, name>]} used to track what paths are there for one parent
 
 ### Frontend
 
 Optimaly Server only provides the Data Objects and UI is built locally, also you could connect to multiple sources allowing search over multiple as well
 
-For easier implementation and compatibility the server provides UI here (compromise)
+For easier implementation and compatibility the server provides UI here (compromise), similair to Admin-Panel
 
 maybe create local variant as well, to allow better managing of multiple objects, sources and local data like settings, favorites, git and AI-chats
 
@@ -75,3 +78,7 @@ web-assembly-server-host/ -> search Tab
 web-assembly-server-host/{ObjectId}/ -> display the Object
 
 web-assembly-server-host/{ObjectId}/\*\*{some Pathing}/ -> display object routed to, navigation uses such Paths
+
+## Issues
+
+Classes without Parameterles constructors don't allow deserializing recursion, not sure if a fix is possible
