@@ -12,8 +12,8 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddBlazorStrap();
 
 // global Registry
-// string connectionString = "Host=localhost;Port=5432;Username=root;Password=root;Database=CSWorkBenchDB";
-// Registry registry = new Registry(new DBConnection(connectionString));
-// builder.Services.AddSingleton(registry);
+string connectionString = "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=CSWorkBenchDB";
+Registry registry = new Registry(new DBConnection(connectionString));
+builder.Services.AddSingleton(registry);
 
 await builder.Build().RunAsync();
