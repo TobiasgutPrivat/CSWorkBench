@@ -5,17 +5,6 @@ using System.Runtime.Serialization;
 
 public class FullAccessContractResolver : DefaultContractResolver
 {
-    protected override JsonObjectContract CreateObjectContract(Type objectType)
-    {
-        var contract = base.CreateObjectContract(objectType);
-
-        // Skip constructor: create uninitialized objects
-        contract.DefaultCreatorNonPublic = true;
-        contract.DefaultCreator = () => FormatterServices.GetUninitializedObject(objectType);
-
-        return contract;
-    }
-
     protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
     {
         // Include public properties + fields + private fields

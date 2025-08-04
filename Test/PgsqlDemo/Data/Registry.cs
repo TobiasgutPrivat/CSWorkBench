@@ -17,9 +17,9 @@ class Registry(DBConnection db)
     {
         PreserveReferencesHandling = PreserveReferencesHandling.All,
         ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-        // TypeNameHandling = TypeNameHandling.All,
+        // TypeNameHandling = TypeNameHandling.All, // not really needed, might be safer in some cases
         ContractResolver = new FullAccessContractResolver(),
-        Formatting = Formatting.Indented,
+        Formatting = Formatting.Indented, // not needed, but nice for formatting
     };
 
     public void SaveObject(object obj)
@@ -67,6 +67,7 @@ class Registry(DBConnection db)
         {
             db.GetObject(id, out string className, out string data);
             Type type = Type.GetType(className) ?? throw new Exception($"Type {className} not found.");
+            // recursion does not work if classes don't have parameterless constructors
             object obj = JsonConvert.DeserializeObject(data, type, options) ?? throw new Exception($"Object with ID {id} not found.");
             Objects[id] = obj;
             ObjectIds[obj] = id;

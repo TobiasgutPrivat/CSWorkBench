@@ -3,8 +3,8 @@
 DBConnection connection = new DBConnection(ConnString);
 Registry registry = new Registry(connection);
 
-Person person = new Person() { Name = "John", Age = 30 };
-Child child = new Child() { Name = "Andrew", Age = 10, Parent = person, FavoriteToy = null };
+Person person = new Person("John", 30);
+Child child = new Child("Andrew", 10, person, null);
 person.children.Add(child); // for recursion
 
 
