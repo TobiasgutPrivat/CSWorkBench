@@ -54,19 +54,19 @@ class DBConnection
         }
     }
 
-    public List<Attachement> GetAttachments(int objectId) //return [(path, name, ObjecId),...]
+    public List<Tuple<string, string, int>> GetAttachments(int objectId) //return [(path, name, ObjecId),...]
     {
         var readCmd = new NpgsqlCommand(
             "SELECT \"path\", \"name\", \"object_id\" FROM \"Attachment\" WHERE \"parent_id\" = @id;", this.connection);
         readCmd.Parameters.AddWithValue("id", objectId);
         using var reader = readCmd.ExecuteReader();
-        List<Attachement> attachments = [];
+        List<Tuple<string, string, int>> attachments = [];
         while (reader.Read())
         {
             string path = reader.GetString(0);
             string name = reader.GetString(1);
             int objId = reader.GetInt32(2);
-            attachments.Add(new Attachement(path, name, objId));
+            attachments.Add(new Tuple<string, string, int>(path, name, objId));
         }
         return attachments;
     }
