@@ -1,12 +1,13 @@
-using Npgsql;
+namespace DynObjectStore;
 
-class DBConnection
+using Npgsql;
+public class PgDBConnection : IDBConnection
 {
     // Handles all SQL operations
 
     private NpgsqlConnection connection;
 
-    public DBConnection(string connString)
+    public PgDBConnection(string connString)
     {
         this.connection = new NpgsqlConnection(connString);
         this.connection.Open();
@@ -23,7 +24,7 @@ class DBConnection
         "INSERT INTO \"Object\" (\"class\", \"data\") VALUES (@class, @data) RETURNING \"id\";", this.connection);
         createCmd.Parameters.AddWithValue("class", Class);
         createCmd.Parameters.AddWithValue("data", Data);
-        var objectId = (int)createCmd.ExecuteScalar();
+        var objectId = (int)createCmd.ExecuteScalar()!;
         return objectId;
     }
 

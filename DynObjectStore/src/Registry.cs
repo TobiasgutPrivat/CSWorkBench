@@ -1,6 +1,8 @@
+namespace DynObjectStore;
+
 using Newtonsoft.Json;
 
-class Registry(DBConnection db)
+public class Registry(IDBConnection db)
 {
     //local Memory storage connected to one database.
 
@@ -130,4 +132,4 @@ class Registry(DBConnection db)
     }
 }
 
-class AttachmentId(object parent, string path, string name) : Tuple<object, string, string>(parent, path, name) { };
+public class AttachmentId(object parent, string path, string name) : Tuple<object, string, string>(parent, path, name) { };

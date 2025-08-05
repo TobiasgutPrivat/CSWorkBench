@@ -1,9 +1,10 @@
+namespace DynObjectStore;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
-using System.Runtime.Serialization;
 
-public class FullAccessContractResolver : DefaultContractResolver
+class FullAccessContractResolver : DefaultContractResolver
 {
     protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
     {
@@ -42,12 +43,12 @@ public class FullAccessContractResolver : DefaultContractResolver
     }
 }
 
-public class FieldValueProvider : IValueProvider
+class FieldValueProvider : IValueProvider
 {
     private readonly FieldInfo field;
 
     public FieldValueProvider(FieldInfo field) => this.field = field;
 
-    public object GetValue(object target) => field.GetValue(target);
-    public void SetValue(object target, object value) => field.SetValue(target, value);
+    public object GetValue(object target) => field.GetValue(target)!;
+    public void SetValue(object target, object? value) => field.SetValue(target, value);
 }
