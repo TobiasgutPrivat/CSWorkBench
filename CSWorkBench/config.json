@@ -1,0 +1,4 @@
+{
+    "connectionstring": "postgresql://postgres:root@localhost:5432/mydb",
+    "startupobject": 0
+}
