@@ -1,0 +1,63 @@
+## Build output
+bin/
+obj/
+
+## VS Code settings
+.vscode/
+
+## User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Rider files
+.idea/
+
+## Visual Studio Mac
+*.pidb
+*.userprefs
+
+## ASP.NET stuff (if using web projects)
+wwwroot/
+*.db
+*.sqlite
+
+## NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Logs
+*.log
+
+## Temporary files
+*.tmp
+*.bak
+*.swp
+*~$
+
+## Test results
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+## Publish output
+publish/
+
+## OS-generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+## Global JetBrains Rider files
+.idea/
+*.sln.iml
+
+## dotnet tools
+.dotnet-tools.json
