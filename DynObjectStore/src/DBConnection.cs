@@ -9,8 +9,23 @@ public class PgDBConnection : IDBConnection
 
     public PgDBConnection(string connString)
     {
-        this.connection = new NpgsqlConnection(connString);
-        this.connection.Open();
+        try
+        {
+            using var conn = new NpgsqlConnection(connString);
+            conn.Open();
+            Console.WriteLine("Connection successful!");
+            this.connection = conn;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Connection failed:");
+            Console.WriteLine(ex.Message);
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine("Inner exception: " + ex.InnerException.Message);
+            }
+        }
+
     }
 
     public void Close()

@@ -1,20 +1,47 @@
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using BlazorStrap;
+using CSWorkBench.Components;
 using DynObjectStore;
-using CSWorkBench;
+using Npgsql;
 
-var builder = WebAssemblyHostBuilder.CreateDefault(args);
-builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
+var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+// Add services to the container.
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 
 builder.Services.AddBlazorStrap();
 
-// global Registry
-string connectionString = "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=CSWorkBenchDB";
-Registry registry = new Registry(new PgDBConnection(connectionString));
-builder.Services.AddSingleton(registry);
+// // PostgreSQL connection setup
+// var connBuilder = new NpgsqlConnectionStringBuilder
+// {
+//     Host = "localhost",
+//     Port = 5432,
+//     Username = "postgres",
+//     Password = "postgres",
+//     Database = "CSWorkBenchDB",
+//     SslMode = SslMode.Disable
+// };
 
-await builder.Build().RunAsync();
+// IDBConnection conn = new PgDBConnection(connBuilder.ConnectionString);
+// var registry = new Registry(conn);
+// builder.Services.AddSingleton(registry);
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+
+app.UseStaticFiles();
+app.UseAntiforgery();
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
+
+app.Run();
