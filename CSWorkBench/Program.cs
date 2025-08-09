@@ -11,20 +11,20 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddBlazorStrap();
 
-// // PostgreSQL connection setup
-// var connBuilder = new NpgsqlConnectionStringBuilder
-// {
-//     Host = "localhost",
-//     Port = 5432,
-//     Username = "postgres",
-//     Password = "postgres",
-//     Database = "CSWorkBenchDB",
-//     SslMode = SslMode.Disable
-// };
+// PostgreSQL connection setup
+var connBuilder = new NpgsqlConnectionStringBuilder
+{
+    Host = "localhost",
+    Port = 5432,
+    Username = "postgres",
+    Password = "postgres",
+    Database = "CSWorkBenchDB",
+    SslMode = SslMode.Disable
+};
 
-// IDBConnection conn = new PgDBConnection(connBuilder.ConnectionString);
-// var registry = new Registry(conn);
-// builder.Services.AddSingleton(registry);
+IDBConnection conn = new PgDBConnection(connBuilder.ConnectionString);
+var registry = new Registry(conn);
+builder.Services.AddSingleton(registry);
 
 var app = builder.Build();
 

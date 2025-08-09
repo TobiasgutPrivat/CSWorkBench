@@ -1,8 +1,17 @@
 ﻿@page "/object/{id}"
+@inject Registry registry
+@using DynObjectStore
+@using System.Net.Mail
 
 <strong>ID:</strong> @id <br />
 
 @code {
     [Parameter]
     public string? id { get; set; }
+    public object CurObject = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CurObject = registry.GetObject(int.Parse(id));
+    }
 }
