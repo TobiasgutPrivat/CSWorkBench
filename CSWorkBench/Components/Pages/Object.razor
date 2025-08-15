@@ -1,9 +1,10 @@
 ﻿@page "/object/{id}"
-@inject Registry registry
 @using DynObjectStore
-@using System.Net.Mail
+@inject Registry registry
 
 <strong>ID:</strong> @id <br />
+
+<p>@CurObject.ToString()</p>
 
 @code {
     [Parameter]

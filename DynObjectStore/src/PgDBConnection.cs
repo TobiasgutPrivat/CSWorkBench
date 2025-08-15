@@ -9,23 +9,8 @@ public class PgDBConnection : IDBConnection
 
     public PgDBConnection(string connString)
     {
-        try
-        {
-            using var conn = new NpgsqlConnection(connString);
-            conn.Open();
-            Console.WriteLine("Connection successful!");
-            this.connection = conn;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Connection failed:");
-            Console.WriteLine(ex.Message);
-            if (ex.InnerException != null)
-            {
-                Console.WriteLine("Inner exception: " + ex.InnerException.Message);
-            }
-        }
-
+        this.connection = new NpgsqlConnection(connString);
+        this.connection.Open();
     }
 
     public void Close()
@@ -53,7 +38,7 @@ public class PgDBConnection : IDBConnection
         createAttachmentCmd.Parameters.AddWithValue("object_id", objectId);
         createAttachmentCmd.ExecuteNonQuery();
     }
-    public void GetObject(int objectId, out string Class, out string data) //return (class, data)
+    public void GetObject(int objectId, out string? Class, out string? data) //return (class, data)
     {
         var readCmd = new NpgsqlCommand(
             "SELECT \"class\", \"data\" FROM \"Object\" WHERE \"id\" = @id;", this.connection);
@@ -66,7 +51,8 @@ public class PgDBConnection : IDBConnection
         }
         else
         {
-            throw new Exception($"Object with ID {objectId} not found.");
+            Class = null;
+            data = null;
         }
     }
 

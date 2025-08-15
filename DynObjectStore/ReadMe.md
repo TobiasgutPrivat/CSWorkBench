@@ -22,3 +22,7 @@ RealTime-Memory:
 - registry for Objects: {ObjectId: Object}
 - registry for attachements {<Object, path, name>, Object} used to track what object is at a specific path
 - registry for attachementIds {Object, [<Object, path, name>]} used to track what paths are there for one parent
+
+## issues
+
+- recursion does not work if classes don't have parameterless constructors

@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynObjectStore.Tests", "DynObjectStore.Tests.csproj", "{9E92CF0A-A765-F1FF-589F-93DB32E4F5D9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestClasses", "TestClasses.csproj", "{E5B9223E-9DAB-AB9E-8127-726B4754EA18}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,15 +10,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9E92CF0A-A765-F1FF-589F-93DB32E4F5D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9E92CF0A-A765-F1FF-589F-93DB32E4F5D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9E92CF0A-A765-F1FF-589F-93DB32E4F5D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9E92CF0A-A765-F1FF-589F-93DB32E4F5D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5B9223E-9DAB-AB9E-8127-726B4754EA18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5B9223E-9DAB-AB9E-8127-726B4754EA18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5B9223E-9DAB-AB9E-8127-726B4754EA18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5B9223E-9DAB-AB9E-8127-726B4754EA18}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {0653C96D-EEC2-46DE-B81E-2FEDE5F6DE5F}
+		SolutionGuid = {BC05D5FC-E387-4569-89C2-9C02AD345A6A}
 	EndGlobalSection
 EndGlobal

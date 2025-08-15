@@ -3,6 +3,8 @@ using CSWorkBench.Components;
 using DynObjectStore;
 using Npgsql;
 
+AssemblyResolver.AddAssemblyResolvers();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
