@@ -1,15 +1,20 @@
-﻿@page "/object/{id}"
+﻿@page "/{id:int}/{*path}"
 @using DynObjectStore
 @inject Registry registry
 
 <strong>ID:</strong> @id <br />
+<strong>Path:</strong> @path <br />
 
 <p>@CurObject.ToString()</p>
 
 @code {
     [Parameter]
-    public string? id { get; set; }
-    public object CurObject = null;
+    public int? id { get; set; }
+
+    [Parameter]
+    public string? path { get; set; }
+
+    public object? CurObject = null;
 
     protected override async Task OnInitializedAsync()
     {
