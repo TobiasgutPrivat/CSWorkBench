@@ -1,3 +1,19 @@
+# Setup
+
+**Requires** 
+- some DB server with according implementation of IDBConnection and according schema
+- initialization of DBConnection and Registry
+
+## Tested:
+
+PgSqlServer with schema from init/schema.sql ([download](https://www.postgresql.org/download/))
+
+PgAdmin4 and Command Line Tools are usefull for administration and testing
+
+## Untested
+
+docker-compose maybe works
+
 # Concept
 
 Objects:
