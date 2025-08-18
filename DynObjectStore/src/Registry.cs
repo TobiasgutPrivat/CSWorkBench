@@ -5,11 +5,7 @@ using Newtonsoft.Json;
 
 public class Registry(IDBConnection db)
 {
-    //local Memory storage connected to one database.
-
-    // in registry means in DB 1:1
-    // delaying commmiting like in git could be added (runtime sessions)
-    // user management could be added    
+    // like local memory connected to drive (here database-service)
 
     Dictionary<int, object> Objects = [];
     public Dictionary<object, int> ObjectIds = [];

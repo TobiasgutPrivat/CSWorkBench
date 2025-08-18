@@ -1,5 +1,7 @@
 # Concept
 
+based on Idea of a (Global entity-centric IT Environement)[https://www.notion.so/Global-Entity-Centric-IT-1bd37f05f33a8024bd0aea28f3f3baba]
+
 Objects:
 
 - model: (id, class, serialized data)
@@ -22,6 +24,10 @@ RealTime-Memory:
 - registry for Objects: {ObjectId: Object}
 - registry for attachements {<Object, path, name>, Object} used to track what object is at a specific path
 - registry for attachementIds {Object, [<Object, path, name>]} used to track what paths are there for one parent
+
+## Decisions
+
+- implementing git like feature in here, does not make sense because this is about local computing, git like systems can though be implemented as C# module allowing interaction from Computer to server or similair
 
 ## issues
 
