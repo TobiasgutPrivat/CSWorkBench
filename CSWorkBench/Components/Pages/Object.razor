@@ -5,7 +5,7 @@
 <strong>ID:</strong> @id <br />
 <strong>Path:</strong> @path <br />
 
-<p>@CurObject.ToString()</p>
+<p>@CurObject?.ToString()</p>
 
 @code {
     [Parameter]
@@ -18,6 +18,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        CurObject = registry.GetObject(int.Parse(id));
+        if (id.HasValue) {
+            CurObject = await Task.Run(() => registry.GetObject(id.Value));
+        }
     }
 }
