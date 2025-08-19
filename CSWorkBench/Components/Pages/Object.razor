@@ -39,32 +39,14 @@
         {
             if (part == "") continue;
 
-            Type type = obj!.GetType();
-            if (obj is Array arr)
+            var property = obj.GetType().GetProperty(part, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+            if (property is not null)
             {
-                if (int.TryParse(part, out int index) && index < arr.Length)
-                {
-                    obj = arr.GetValue(index);
-                }
+                obj = property.GetValue(obj);
             }
-            else if (obj is IList<object> list)
+            else if (obj is IEnumerable<object> enumerable && int.TryParse(part, out int index))
             {
-                if (int.TryParse(part, out int index) && index < list.Count)
-                {
-                    obj = list[index];
-                }
-            }
-            else if (obj is IEnumerable<object> enumerable)
-            {
-                if (int.TryParse(part, out int index))
-                {
-                    obj = enumerable.Cast<object>().ElementAtOrDefault(index);
-                }
-            }
-            else
-            {
-                obj = type.GetProperty(part, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase)?.GetValue(obj) ??
-                (MemberInfo?)type.GetField(part, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase)?.GetValue(obj);
+                obj = enumerable.Cast<object>().ElementAtOrDefault(index);
             }
         }
     }
