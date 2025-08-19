@@ -8,8 +8,6 @@
 <strong>ID:</strong> @id <br />
 <strong>Path:</strong> @path <br />
 
-<p>@JsonSerializer.Serialize(rootObject)</p>
-
 <p>@JsonSerializer.Serialize(obj)</p>
 
 @code {
@@ -20,33 +18,29 @@
     public string? path { get; set; }
 
     public object? obj = null;
-    public object? rootObject = null;
-    public bool pathExists = false;
 
     protected override async Task OnInitializedAsync()
     {
         if (id.HasValue)
         {
-            rootObject = await Task.Run(() => registry.GetObject(id.Value));
+            obj = await Task.Run(() => registry.GetObject(id.Value));
         }
 
-        if (rootObject is null) return;
-
-        obj = rootObject!;
+        if (obj is null) return;
 
         if (path is null) return;
-        foreach (string part in path.Split('/').ToList())
-        {
-            if (part == "") continue;
 
-            var property = obj.GetType().GetProperty(part, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+        foreach (string part in path.Split('/').Where(p => !string.IsNullOrWhiteSpace(p)))
+        {
+            var property = obj!.GetType().GetProperty(part, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
             if (property is not null)
             {
                 obj = property.GetValue(obj);
             }
             else if (obj is IEnumerable<object> enumerable && int.TryParse(part, out int index))
             {
-                obj = enumerable.Cast<object>().ElementAtOrDefault(index);
+                obj = enumerable.ElementAtOrDefault(index);
             }
         }
     }

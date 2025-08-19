@@ -11,7 +11,6 @@ public class Registry(IDBConnection db)
     public Dictionary<object, int> ObjectIds = [];
     Dictionary<AttachmentId, object> Attachements = []; // parent, path, name, object
     Dictionary<object, List<AttachmentId>> AttachementIds = [];
-    Dictionary<string, Assembly> Assemblies = [];
 
     private static readonly JsonSerializerSettings options = new JsonSerializerSettings
     {
@@ -21,6 +20,15 @@ public class Registry(IDBConnection db)
         ContractResolver = new FullAccessContractResolver(),
         Formatting = Formatting.Indented, // not needed, but nice for formatting
     };
+
+    public void SaveObject(int id)
+    {
+        if (Objects.TryGetValue(id, out object? obj))
+        {
+            string jsonData = JsonConvert.SerializeObject(obj, options);
+            db.UpdateObject(id, jsonData);
+        }
+    }
 
     public void SaveObject(object obj)
     {
@@ -114,7 +122,12 @@ public class Registry(IDBConnection db)
             foreach (Tuple<string, string, int> attachment in attachments)
             {
                 AttachmentId attachmentId = new AttachmentId(parent, attachment.Item1, attachment.Item2);
-                Attachements[attachmentId] = GetObject(attachment.Item3);
+                object? obj = GetObject(attachment.Item3);
+                if (obj == null) {
+                    DeleteAttachment(parent, attachment.Item1, attachment.Item2);
+                    continue;
+                }
+                Attachements[attachmentId] = obj;
                 value.Add(attachmentId);
             }
             AttachementIds[parent] = value;
