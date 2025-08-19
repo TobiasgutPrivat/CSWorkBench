@@ -1,11 +1,16 @@
 ﻿@page "/{id:int}/{*path}"
 @using DynObjectStore
+@using System.Reflection
+@using System.Text.Json
+@using System.Xml.Serialization
 @inject Registry registry
 
 <strong>ID:</strong> @id <br />
 <strong>Path:</strong> @path <br />
 
-<p>@CurObject?.ToString()</p>
+<p>@JsonSerializer.Serialize(rootObject)</p>
+
+<p>@JsonSerializer.Serialize(obj)</p>
 
 @code {
     [Parameter]
@@ -14,12 +19,53 @@
     [Parameter]
     public string? path { get; set; }
 
-    public object? CurObject = null;
+    public object? obj = null;
+    public object? rootObject = null;
+    public bool pathExists = false;
 
     protected override async Task OnInitializedAsync()
     {
-        if (id.HasValue) {
-            CurObject = await Task.Run(() => registry.GetObject(id.Value));
+        if (id.HasValue)
+        {
+            rootObject = await Task.Run(() => registry.GetObject(id.Value));
+        }
+
+        if (rootObject is null) return;
+
+        obj = rootObject!;
+
+        if (path is null) return;
+        foreach (string part in path.Split('/').ToList())
+        {
+            if (part == "") continue;
+
+            Type type = obj!.GetType();
+            if (obj is Array arr)
+            {
+                if (int.TryParse(part, out int index) && index < arr.Length)
+                {
+                    obj = arr.GetValue(index);
+                }
+            }
+            else if (obj is IList<object> list)
+            {
+                if (int.TryParse(part, out int index) && index < list.Count)
+                {
+                    obj = list[index];
+                }
+            }
+            else if (obj is IEnumerable<object> enumerable)
+            {
+                if (int.TryParse(part, out int index))
+                {
+                    obj = enumerable.Cast<object>().ElementAtOrDefault(index);
+                }
+            }
+            else
+            {
+                obj = type.GetProperty(part, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase)?.GetValue(obj) ??
+                (MemberInfo?)type.GetField(part, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase)?.GetValue(obj);
+            }
         }
     }
 }
