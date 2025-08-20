@@ -23,7 +23,8 @@ public class Registry(IDBConnection db)
     {
         if (Objects.TryGetValue(id, out object? obj))
         {
-            // options.resolver = ;
+            options.ReferenceResolverProvider = () => new RegistryReferenceResolver(this, ObjectReferences[obj]);
+            options.Converters = [new AttachmentAwareConverter<object>(this, ObjectReferences[obj])];
             string jsonData = JsonConvert.SerializeObject(obj, options);
             db.UpdateObject(id, jsonData);
         }
@@ -66,13 +67,19 @@ public class Registry(IDBConnection db)
         if (Objects.TryGetValue(id, out object? value)) return value;
 
         db.GetObject(id, out string? className, out string? data);
+
         if (className == null || data == null) return null;
 
         Type type = Type.GetType(className) ?? throw new Exception($"Type {className} not found.");
 
+        ObjectReferences objRef = new ObjectReferences();
+        options.ReferenceResolverProvider = () => new RegistryReferenceResolver(this, objRef);
+        options.Converters = [new AttachmentAwareConverter<object>(this, objRef)];
+
         object obj = JsonConvert.DeserializeObject(data, type, options) ?? throw new Exception($"Object with ID {id} not found.");
         Objects[id] = obj;
         ObjectIds[obj] = id;
+        ObjectReferences[obj] = objRef;
         return obj;
     }
 
