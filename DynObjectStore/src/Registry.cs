@@ -24,7 +24,7 @@ public class Registry(IDBConnection db)
         if (Objects.TryGetValue(id, out object? obj))
         {
             options.ReferenceResolverProvider = () => new RegistryReferenceResolver(this, ObjectReferences[obj]);
-            options.Converters = [new AttachmentAwareConverter<object>(this, ObjectReferences[obj])];
+            options.ContractResolver = new AttachmentsContractResolver(ObjectReferences[obj]);
             string jsonData = JsonConvert.SerializeObject(obj, options);
             db.UpdateObject(id, jsonData);
         }
@@ -32,8 +32,13 @@ public class Registry(IDBConnection db)
 
     public int SaveObject(object obj)
     {
-        options.ReferenceResolverProvider = () => new RegistryReferenceResolver(this, ObjectReferences[obj]);
-        options.Converters = [new AttachmentAwareConverter<object>(this, ObjectReferences[obj])];
+        if (!ObjectReferences.TryGetValue(obj, out ObjectReferences? objRef))
+        {
+            objRef = new ObjectReferences();
+            ObjectReferences[obj] = objRef;
+        }
+        options.ReferenceResolverProvider = () => new RegistryReferenceResolver(this, objRef);
+        options.ContractResolver = new AttachmentsContractResolver(objRef);
         string jsonData = JsonConvert.SerializeObject(obj, options);
         if (ObjectIds.TryGetValue(obj, out int id))
         {
@@ -62,6 +67,17 @@ public class Registry(IDBConnection db)
         }
     }
 
+    public void DeleteObject(int id)
+    {
+        db.DeleteObject(id);
+        Objects.Remove(id);
+        if (Objects.TryGetValue(id, out object? obj))
+        {
+            ObjectIds.Remove(obj);
+            ObjectReferences.Remove(obj);
+        }
+    }
+
     public object? GetObject(int id)
     {
         if (Objects.TryGetValue(id, out object? value)) return value;
@@ -74,7 +90,7 @@ public class Registry(IDBConnection db)
 
         ObjectReferences objRef = new ObjectReferences();
         options.ReferenceResolverProvider = () => new RegistryReferenceResolver(this, objRef);
-        options.Converters = [new AttachmentAwareConverter<object>(this, objRef)];
+        options.ContractResolver = new AttachmentsContractResolver(objRef);
 
         object obj = JsonConvert.DeserializeObject(data, type, options) ?? throw new Exception($"Object with ID {id} not found.");
         Objects[id] = obj;

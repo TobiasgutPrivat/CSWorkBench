@@ -1,64 +1,105 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+// using System.Reflection;
+// using Newtonsoft.Json;
+// using Newtonsoft.Json.Linq;
 
-namespace DynObjectStore;
+// namespace DynObjectStore;
 
-public class AttachmentAwareConverter<T>(Registry registry, ObjectReferences objRef) : JsonConverter<T>
-{
+// public class AttachmentAwareConverter(Registry registry, ObjectReferences objRef) : JsonConverter
+// {
 
-    public override void WriteJson(JsonWriter writer, T? value, JsonSerializer serializer)
-    {
-        JObject obj = JObject.FromObject(value!, serializer);
+//     public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+//     {
+//         // default behaviour
+//         if (value == null)
+//         {
+//             writer.WriteNull();
+//             return;
+//         }
 
-        if (objRef.Attachements.TryGetValue(value, out var attachments))
-        {
-            var attList = new JArray();
-            foreach (var entry in attachments)
-            {
-                attList.Add(new JObject
-                {
-                    ["name"] = entry.Key.ToString(),
-                    ["id"] = registry.ObjectIds[entry.Value] // root object id
-                });
-            }
-            obj["#attachments"] = attList;
-        }
+//         Type type = value.GetType();
+//         writer.WriteStartObject();
 
-        obj.WriteTo(writer);
-    }
+//         // Write all public properties
+//         foreach (PropertyInfo prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+//         {
+//             if (!prop.CanRead) continue;
 
-    public override T? ReadJson(JsonReader reader, Type objectType, T? existingValue, bool hasExistingValue, JsonSerializer serializer)
-    {
-        JObject obj = JObject.Load(reader);
+//             object propValue = prop.GetValue(value);
+//             writer.WritePropertyName(prop.Name);
 
-        // normal properties
-        T result = obj.ToObject<T>(serializer)!;
+//             // Serialize the property value normally (nested objects hit this converter)
+//             serializer.Serialize(writer, propValue);
+//         }
 
-        // extract attachments
-        if (obj.TryGetValue("#attachments", out JToken? attToken))
-        {
-            foreach (var att in attToken.Children<JObject>())
-            {
-                string name = att["name"]!.ToString();
-                int id = att["id"]!.ToObject<int>();
+//         // handle attachements
+//         if (objRef.Attachements.TryGetValue(value, out var attachments))
+//         {
+//             var attList = new JArray();
+//             foreach (var entry in attachments)
+//             {
+//                 attList.Add(new JObject
+//                 {
+//                     ["name"] = entry.Key.ToString(),
+//                     ["id"] = registry.ObjectIds[entry.Value] // root object id
+//                 });
+//             }
+//             writer.WritePropertyName("#attachments");
+//             writer.WriteValue(attList);
+//         }
 
-                // store in Registry instead of assigning to result
-                if (objRef.Attachements.TryGetValue(result, out var attachments))
-                {
-                    attachments[name] = registry.GetObject(id);
-                }
-                else
-                {
-                    attachments = new Dictionary<string, object>();
-                    attachments[name] = registry.GetObject(id);
-                    objRef.Attachements[result] = attachments;
-                }
-            }
-        }
+//         writer.WriteEndObject();
+//     }
 
-        return result;
-    }
+//     public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+//     {
+//         if (reader.TokenType == JsonToken.Null)
+//             return null;
 
-    public override bool CanRead => true;
-    public override bool CanWrite => true;
-}
+//         object instance = Activator.CreateInstance(objectType);
+
+//         // Load the object as JObject so we can inspect special properties
+//         var jo = JObject.Load(reader);
+
+//         // Handle #attachments first
+//         if (jo.TryGetValue("#attachments", out JToken? attToken))
+//         {
+//             foreach (var att in attToken.Children<JObject>())
+//             {
+//                 string name = att["name"]!.ToString();
+//                 int id = att["id"]!.ToObject<int>()!;
+
+//                 // store in Registry instead of assigning to result
+//                 if (!objRef.Attachements.TryGetValue(instance, out var attachments))
+//                 {
+//                     attachments = new Dictionary<string, object>();
+//                     objRef.Attachements[instance] = attachments;
+//                 }
+
+//                 attachments[name] = registry.GetObject(id);
+//             }
+
+//             // Remove the special property so we don't try to set it
+//             jo.Remove("#attachments");
+//         }
+
+//         // Deserialize normal properties
+//         foreach (var prop in objectType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+//         {
+//             if (!prop.CanWrite) continue;
+
+//             if (jo.TryGetValue(prop.Name, out JToken? token))
+//             {
+//                 object? value = token.ToObject(prop.PropertyType, serializer);
+//                 prop.SetValue(instance, value);
+//             }
+//         }
+
+//         return instance;
+//     }
+
+//     public override bool CanConvert(Type objectType)
+//     {
+//         // Apply to all reference types except primitives and strings
+//         return !objectType.IsPrimitive && objectType != typeof(string);
+//     }
+// }

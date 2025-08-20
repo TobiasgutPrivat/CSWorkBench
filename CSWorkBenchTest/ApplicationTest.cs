@@ -1,6 +1,8 @@
 namespace CSWorkBenchTest;
 
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using DynObjectStore;
 using Npgsql;
 
@@ -24,9 +26,8 @@ public class ApplicationTest
     [Fact]
     public void Object()
     {
+        // setup
         Assembly assembly = Assembly.LoadFrom(@"..\..\..\..\TestClasses\bin\Debug\net8.0\TestClasses.dll");
-        Registry registry = connectToDB();
-        Registry registry2 = connectToDB();
 
         Type? personType = assembly.GetType("Person");
         Assert.NotNull(personType);
@@ -45,17 +46,26 @@ public class ApplicationTest
         var children = personType.GetProperty("Children")!.GetValue(person);
         children.GetType().GetMethod("Add")!.Invoke(children, new object[] { child });
 
-        registry.SaveObject(person);
-        int id = registry.ObjectIds[person];
+        JsonSerializerOptions options = new JsonSerializerOptions() { ReferenceHandler = ReferenceHandler.Preserve };
+
+        // testing
+        Registry registry = connectToDB();
+        Registry registry2 = connectToDB();
+
+        int id = registry.SaveObject(person);
 
         object? person2 = registry2.GetObject(id);
         Assert.NotNull(person2);
         Assert.IsType(personType, person2);
-        Assert.Equal(person.ToString(), person2.ToString());
+
+        Assert.Equal(JsonSerializer.Serialize(person, options), JsonSerializer.Serialize(person, options));
 
         registry.DeleteObject(id);
         Registry registry3 = connectToDB();
         object? person3 = registry3.GetObject(id);
         Assert.Null(person3);
+        //TODO test changing paths
+
+        //TODO test attachments
     }
 }
