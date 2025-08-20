@@ -28,16 +28,6 @@ public class PgDBConnection : IDBConnection
         return objectId;
     }
 
-    public void CreateAttachment(int parentId, string path, string name, int objectId)
-    {
-        var createAttachmentCmd = new NpgsqlCommand(
-            "INSERT INTO \"Attachment\" (\"parent_id\", \"path\", \"name\", \"object_id\") VALUES (@parent_id, @path, @name, @object_id);", this.connection);
-        createAttachmentCmd.Parameters.AddWithValue("parent_id", parentId);
-        createAttachmentCmd.Parameters.AddWithValue("path", path);
-        createAttachmentCmd.Parameters.AddWithValue("name", name);
-        createAttachmentCmd.Parameters.AddWithValue("object_id", objectId);
-        createAttachmentCmd.ExecuteNonQuery();
-    }
     public void GetObject(int objectId, out string? Class, out string? data) //return (class, data)
     {
         var readCmd = new NpgsqlCommand(
@@ -56,23 +46,6 @@ public class PgDBConnection : IDBConnection
         }
     }
 
-    public List<Tuple<string, string, int>> GetAttachments(int objectId) //return [(path, name, ObjecId),...]
-    {
-        var readCmd = new NpgsqlCommand(
-            "SELECT \"path\", \"name\", \"object_id\" FROM \"Attachment\" WHERE \"parent_id\" = @id;", this.connection);
-        readCmd.Parameters.AddWithValue("id", objectId);
-        using var reader = readCmd.ExecuteReader();
-        List<Tuple<string, string, int>> attachments = [];
-        while (reader.Read())
-        {
-            string path = reader.GetString(0);
-            string name = reader.GetString(1);
-            int objId = reader.GetInt32(2);
-            attachments.Add(new Tuple<string, string, int>(path, name, objId));
-        }
-        return attachments;
-    }
-
     public void UpdateObject(int objectId, string newData)
     {
         var updateCmd = new NpgsqlCommand(
@@ -87,16 +60,6 @@ public class PgDBConnection : IDBConnection
         var deleteCmd = new NpgsqlCommand(
             "DELETE FROM \"Object\" WHERE \"id\" = @id;", this.connection);
         deleteCmd.Parameters.AddWithValue("id", objectId);
-        deleteCmd.ExecuteNonQuery();
-    }
-
-    public void DeleteAttachment(int parentId, string path, string name)
-    {
-        var deleteCmd = new NpgsqlCommand(
-            "DELETE FROM \"Attachment\" WHERE \"parent_id\" = @parentId AND \"path\" = @path AND \"name\" = @name;", this.connection);
-        deleteCmd.Parameters.AddWithValue("parentId", parentId);
-        deleteCmd.Parameters.AddWithValue("path", path);
-        deleteCmd.Parameters.AddWithValue("name", name);
         deleteCmd.ExecuteNonQuery();
     }
 }

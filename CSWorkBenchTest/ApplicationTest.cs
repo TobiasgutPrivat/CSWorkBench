@@ -35,6 +35,16 @@ public class ApplicationTest
         personType.GetProperty("Name")!.SetValue(person, "John");
         personType.GetProperty("Age")!.SetValue(person, 30);
 
+        Type? childType = assembly.GetType("Child");
+        Assert.NotNull(childType);
+        object? child = Activator.CreateInstance(childType);
+        Assert.NotNull(child);
+        childType.GetProperty("Name")!.SetValue(child, "John");
+        childType.GetProperty("Age")!.SetValue(child, 30);
+        childType.GetProperty("Parent")!.SetValue(child, person);
+        var children = personType.GetProperty("Children")!.GetValue(person);
+        children.GetType().GetMethod("Add")!.Invoke(children, new object[] { child });
+
         registry.SaveObject(person);
         int id = registry.ObjectIds[person];
 

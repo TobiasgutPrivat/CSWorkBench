@@ -1,16 +1,14 @@
 namespace DynObjectStore;
 
-using System.Reflection;
 using Newtonsoft.Json;
 
 public class Registry(IDBConnection db)
 {
     // like local memory connected to drive (here database-service)
 
-    Dictionary<int, object> Objects = [];
-    public Dictionary<object, int> ObjectIds = [];
-    Dictionary<AttachmentId, object> Attachements = []; // parent, path, name, object
-    Dictionary<object, List<AttachmentId>> AttachementIds = [];
+    internal Dictionary<int, object> Objects = [];
+    internal Dictionary<object, int> ObjectIds = [];
+    internal Dictionary<object, ObjectReferences> ObjectReferences = []; // rootobject -> subobject -> id (created from serialization)
 
     private static readonly JsonSerializerSettings options = new JsonSerializerSettings
     {
@@ -25,17 +23,21 @@ public class Registry(IDBConnection db)
     {
         if (Objects.TryGetValue(id, out object? obj))
         {
+            // options.resolver = ;
             string jsonData = JsonConvert.SerializeObject(obj, options);
             db.UpdateObject(id, jsonData);
         }
     }
 
-    public void SaveObject(object obj)
+    public int SaveObject(object obj)
     {
+        options.ReferenceResolverProvider = () => new RegistryReferenceResolver(this, ObjectReferences[obj]);
+        options.Converters = [new AttachmentAwareConverter<object>(this, ObjectReferences[obj])];
         string jsonData = JsonConvert.SerializeObject(obj, options);
         if (ObjectIds.TryGetValue(obj, out int id))
         {
             db.UpdateObject(id, jsonData);
+            return id;
         }
         else
         {
@@ -43,6 +45,8 @@ public class Registry(IDBConnection db)
             int newId = db.CreateObject(type.AssemblyQualifiedName!, jsonData);
             Objects[newId] = obj;
             ObjectIds[obj] = newId;
+            ObjectReferences[obj] = new ObjectReferences();
+            return newId;
         }
     }
 
@@ -50,14 +54,10 @@ public class Registry(IDBConnection db)
     {
         if (ObjectIds.TryGetValue(obj, out int id))
         {
-            if (AttachementIds.TryGetValue(obj, out List<AttachmentId>? attachments))
-            {
-                attachments.ForEach(x => Attachements.Remove(x));
-                AttachementIds.Remove(obj);
-            }
-            db.DeleteObject(id); // also deletes attachements in DB
+            db.DeleteObject(id);
             Objects.Remove(id);
             ObjectIds.Remove(obj);
+            ObjectReferences.Remove(obj);
         }
     }
 
@@ -76,64 +76,34 @@ public class Registry(IDBConnection db)
         return obj;
     }
 
-    public void CreateAttachment(object parent, string path, string name, object obj)
+    public void SetAttachment(object parent, object subObject, string name, object obj)
     {
         SaveObject(parent);
-        List<AttachmentId> attachmentIds = GetAttachmentIds(parent);
 
-        if (attachmentIds.Any(x => x.Item2 == path && x.Item3 == name))
+        if (!ObjectReferences[parent].Attachements.TryGetValue(subObject, out var attachments))
         {
-            throw new Exception("Attachment already exists.");
+            attachments = new Dictionary<string, object>();
+            ObjectReferences[parent].Attachements[subObject] = attachments;
         }
-        if (ObjectIds.TryGetValue(obj, out int id))
-        {
+        attachments[name] = subObject;
 
-        }
         SaveObject(obj);
-        db.CreateAttachment(ObjectIds[parent], path, name, ObjectIds[obj]);
-        AttachmentId attachmentId = new AttachmentId(parent, path, name);
-
-        Attachements[attachmentId] = obj;
-        attachmentIds.Add(attachmentId);
     }
 
-    public void DeleteAttachment(object parent, string path, string name)
+    public void DeleteAttachment(object parent, object subObject, string name)
     {
-        AttachmentId attachmentId = new AttachmentId(parent, path, name);
-        Attachements.Remove(attachmentId);
-        AttachementIds[parent].Remove(attachmentId);
-        db.DeleteAttachment(ObjectIds[parent], path, name);
-    }
-
-    public List<Tuple<string, string, object>> GetAttachments(object parent)
-    {
-        return GetAttachmentIds(parent).Select(x => Tuple.Create(x.Item2, x.Item3, Attachements[x])).ToList();
-    }
-
-    public List<AttachmentId> GetAttachmentIds(object parent)
-    {
+        ObjectReferences[parent].Attachements[subObject].Remove(name);
         SaveObject(parent);
-        if (!AttachementIds.TryGetValue(parent, out List<AttachmentId>? value)) // check if loaded from DB
+    }
+
+    public List<Tuple<string, string, object>> GetAttachments(object parent, object subObject)
+    {
+        if (!ObjectReferences[parent].Attachements.TryGetValue(subObject, out var attachments))
         {
-            value = [];
-            int id = ObjectIds[parent];
-            // load from DB
-            List<Tuple<string, string, int>> attachments = db.GetAttachments(id);
-            foreach (Tuple<string, string, int> attachment in attachments)
-            {
-                AttachmentId attachmentId = new AttachmentId(parent, attachment.Item1, attachment.Item2);
-                object? obj = GetObject(attachment.Item3);
-                if (obj == null) {
-                    DeleteAttachment(parent, attachment.Item1, attachment.Item2);
-                    continue;
-                }
-                Attachements[attachmentId] = obj;
-                value.Add(attachmentId);
-            }
-            AttachementIds[parent] = value;
+            attachments = new Dictionary<string, object>();
+            ObjectReferences[parent].Attachements[subObject] = attachments;
         }
-        return value;
+        return attachments.Select(x => new Tuple<string, string, object>(x.Key, x.Key, x.Value)).ToList();
+
     }
 }
-
-public class AttachmentId(object parent, string path, string name) : Tuple<object, string, string>(parent, path, name) { };

@@ -5,6 +5,7 @@ using System.Reflection;
 
 public class TypeInspector
 {
+    // can check properties of a class structure
     private readonly HashSet<Type> _visited = new();
     private readonly Stack<Type> _currentPath = new();
     private readonly HashSet<Type> _recursiveTypes = new();

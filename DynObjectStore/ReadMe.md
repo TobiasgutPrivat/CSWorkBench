@@ -1,6 +1,7 @@
 # Setup
 
-**Requires** 
+**Requires**
+
 - some DB server with according implementation of IDBConnection and according schema
 - initialization of DBConnection and Registry
 
@@ -46,5 +47,8 @@ RealTime-Memory:
 - implementing git like feature in here, does not make sense because this is about local computing, git like systems can though be implemented as C# module allowing interaction from Computer to server or similair
 
 ## issues
+
+- (resolvable) paths can loose connection when objects change (e.g. list/1/person changes if an element before get's removed)
+  (possible solution) maybe id's can be tracked of objects within an object (like ref in serialization), bind to instance during runtime and deserialize (can maybe be integrated in serialization adding reference to diffrent rootobject -> not needing attachements seperate anymore)
 
 - recursion does not work if classes don't have parameterless constructors
