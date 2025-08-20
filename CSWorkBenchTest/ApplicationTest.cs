@@ -37,14 +37,18 @@ public class ApplicationTest
         personType.GetProperty("Age")!.SetValue(person, 30);
 
         Type? childType = assembly.GetType("Child");
-        Assert.NotNull(childType);
         object? child = Activator.CreateInstance(childType);
-        Assert.NotNull(child);
-        childType.GetProperty("Name")!.SetValue(child, "John");
-        childType.GetProperty("Age")!.SetValue(child, 30);
+        childType.GetProperty("Name")!.SetValue(child, "Alice");
+        childType.GetProperty("Age")!.SetValue(child, 8);
         childType.GetProperty("Parent")!.SetValue(child, person);
         var children = personType.GetProperty("Children")!.GetValue(person);
-        children.GetType().GetMethod("Add")!.Invoke(children, new object[] { child });
+        children.GetType().GetMethod("Add")!.Invoke(children, [child]);
+
+        object? child2 = Activator.CreateInstance(childType);
+        childType.GetProperty("Name")!.SetValue(child2, "Bob");
+        childType.GetProperty("Age")!.SetValue(child2, 12);
+        childType.GetProperty("Parent")!.SetValue(child2, person);
+        children.GetType().GetMethod("Add")!.Invoke(children, [child2]);
 
         JsonSerializerOptions options = new JsonSerializerOptions() { ReferenceHandler = ReferenceHandler.Preserve };
 
@@ -60,12 +64,30 @@ public class ApplicationTest
 
         Assert.Equal(JsonSerializer.Serialize(person, options), JsonSerializer.Serialize(person, options));
 
+        // test changing paths
+        int subid = registry.GetSubId(person, child2) ?? throw new Exception("SubId not found.");
+        Assert.Equal(child2, registry.GetObject(id, subid));
+        children.GetType().GetMethod("RemoveAt")!.Invoke(children, [0]);
+        Assert.Equal(child2, registry.GetObject(id, subid));
+        Registry registry4 = connectToDB();
+        Assert.Equal(JsonSerializer.Serialize(child2, options), JsonSerializer.Serialize(registry4.GetObject(id, subid), options));
+
+        // test attachments
+        registry.SetAttachment(person, child, "image", new byte[] { 1, 2, 3, 4, 5 });
+        registry.SetAttachment(person, child2, "image", new byte[] { 1, 2, 3, 4, 5 });
+
+        List<object> attachments = registry.GetAttachements(person, child, "image", out object obj);
+        Assert.Equal(1, attachments.Count);
+        Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, attachments[0]);
+        Registry registry5 = connectToDB();
+        attachments = registry5.GetAttachements(person, child, "image", out obj);
+        Assert.Equal(1, attachments.Count);
+        Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, attachments[0]);
+
+        // delete
         registry.DeleteObject(id);
         Registry registry3 = connectToDB();
         object? person3 = registry3.GetObject(id);
         Assert.Null(person3);
-        //TODO test changing paths
-
-        //TODO test attachments
     }
 }

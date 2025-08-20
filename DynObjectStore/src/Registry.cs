@@ -7,7 +7,7 @@ public class Registry(IDBConnection db)
     // like local memory connected to drive (here database-service)
 
     internal Dictionary<int, object> Objects = [];
-    internal Dictionary<object, int> ObjectIds = [];
+    internal Dictionary<object, int> ObjectIds = []; //TODO maybe remove this
     internal Dictionary<object, ObjectReferences> ObjectReferences = []; // rootobject -> subobject -> id (created from serialization)
 
     private static readonly JsonSerializerSettings options = new JsonSerializerSettings
@@ -23,8 +23,8 @@ public class Registry(IDBConnection db)
     {
         if (Objects.TryGetValue(id, out object? obj))
         {
-            options.ReferenceResolverProvider = () => new RegistryReferenceResolver(this, ObjectReferences[obj]);
-            options.ContractResolver = new AttachmentsContractResolver(ObjectReferences[obj]);
+            options.ReferenceResolverProvider = () => new RegistryReferenceResolver(ObjectReferences[obj]);
+            options.ContractResolver = new AttachmentsContractResolver(this, ObjectReferences[obj]);
             string jsonData = JsonConvert.SerializeObject(obj, options);
             db.UpdateObject(id, jsonData);
         }
@@ -37,8 +37,8 @@ public class Registry(IDBConnection db)
             objRef = new ObjectReferences();
             ObjectReferences[obj] = objRef;
         }
-        options.ReferenceResolverProvider = () => new RegistryReferenceResolver(this, objRef);
-        options.ContractResolver = new AttachmentsContractResolver(objRef);
+        options.ReferenceResolverProvider = () => new RegistryReferenceResolver(objRef);
+        options.ContractResolver = new AttachmentsContractResolver(this, objRef);
         string jsonData = JsonConvert.SerializeObject(obj, options);
         if (ObjectIds.TryGetValue(obj, out int id))
         {
@@ -89,8 +89,8 @@ public class Registry(IDBConnection db)
         Type type = Type.GetType(className) ?? throw new Exception($"Type {className} not found.");
 
         ObjectReferences objRef = new ObjectReferences();
-        options.ReferenceResolverProvider = () => new RegistryReferenceResolver(this, objRef);
-        options.ContractResolver = new AttachmentsContractResolver(objRef);
+        options.ReferenceResolverProvider = () => new RegistryReferenceResolver(objRef);
+        options.ContractResolver = new AttachmentsContractResolver(this, objRef);
 
         object obj = JsonConvert.DeserializeObject(data, type, options) ?? throw new Exception($"Object with ID {id} not found.");
         Objects[id] = obj;
@@ -99,34 +99,54 @@ public class Registry(IDBConnection db)
         return obj;
     }
 
+    public object? GetObject(int rootId, int id)
+    {
+        object? rootObj = GetObject(rootId);
+        if (rootObj == null) return null;
+        if (!ObjectReferences.TryGetValue(rootObj, out ObjectReferences? SubObjects)) return null;
+        return SubObjects.getSubObject(id);
+    }
+
+    public object? ReloadObject(object obj)
+    {
+        if (ObjectIds.TryGetValue(obj, out int id))
+        {
+            Objects.Remove(id);
+        }
+        ObjectIds.Remove(obj);
+        ObjectReferences.Remove(obj);
+        return GetObject(id);
+    }
+
+    public object? ReloadObject(int id)
+    {
+        if (Objects.TryGetValue(id, out object? obj))
+        {
+            ObjectIds.Remove(obj);
+            ObjectReferences.Remove(obj);
+        }
+        Objects.Remove(id);
+        return GetObject(id);
+    }
+
+    public int? GetSubId(object parent, object subObject) => ObjectReferences[parent].getSubObjectId(subObject);
+
+    public Dictionary<string, object>? GetAttachements(object parent, object subObject)
+    {
+        return ObjectReferences[parent].getAttachements(subObject);
+    }
+
     public void SetAttachment(object parent, object subObject, string name, object obj)
     {
         SaveObject(parent);
-
-        if (!ObjectReferences[parent].Attachements.TryGetValue(subObject, out var attachments))
-        {
-            attachments = new Dictionary<string, object>();
-            ObjectReferences[parent].Attachements[subObject] = attachments;
-        }
-        attachments[name] = subObject;
-
         SaveObject(obj);
+
+        ObjectReferences[parent].addAttachement(subObject, name, obj);
     }
 
     public void DeleteAttachment(object parent, object subObject, string name)
     {
-        ObjectReferences[parent].Attachements[subObject].Remove(name);
+        ObjectReferences[parent].removeAttachement(subObject, name);
         SaveObject(parent);
-    }
-
-    public List<Tuple<string, string, object>> GetAttachments(object parent, object subObject)
-    {
-        if (!ObjectReferences[parent].Attachements.TryGetValue(subObject, out var attachments))
-        {
-            attachments = new Dictionary<string, object>();
-            ObjectReferences[parent].Attachements[subObject] = attachments;
-        }
-        return attachments.Select(x => new Tuple<string, string, object>(x.Key, x.Key, x.Value)).ToList();
-
     }
 }

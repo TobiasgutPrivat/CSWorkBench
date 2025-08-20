@@ -1,11 +1,8 @@
 using DynObjectStore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 
-public class AttachmentsContractResolver(ObjectReferences objRef) : DefaultContractResolver
+public class AttachmentsContractResolver(Registry registry, ObjectReferences objRef) : DefaultContractResolver
 {
     protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
     {
@@ -18,7 +15,7 @@ public class AttachmentsContractResolver(ObjectReferences objRef) : DefaultContr
             PropertyType = typeof(List<Dictionary<string, object>>),
             Readable = true,
             Writable = true,
-            ValueProvider = new AttachmentsValueProvider(objRef),
+            ValueProvider = new AttachmentsValueProvider(registry, objRef),
             DeclaringType = type
         });
 
@@ -26,21 +23,21 @@ public class AttachmentsContractResolver(ObjectReferences objRef) : DefaultContr
     }
 }
 
-public class AttachmentsValueProvider(ObjectReferences objRef) : IValueProvider
+public class AttachmentsValueProvider(Registry registry, ObjectReferences objRef) : IValueProvider
 {
 
-    public object GetValue(object target)
+    public object? GetValue(object target)
     {
-        if (!objRef.Attachements.TryGetValue(target, out var attachments))
-        {
-            attachments = new Dictionary<string, object>();
-            objRef.Attachements[target] = attachments;
-        }
-        return objRef.Attachements[target];
+        Dictionary<string, object>? dict = objRef.getAttachements(target);
+        if (dict == null) return null;
+        return dict.ToDictionary(x => x.Key, x => registry.ObjectIds[x.Value]);
     }
 
-    public void SetValue(object target, object value)
+    public void SetValue(object target, object? value)
     {
-        objRef.Attachements[target] = (Dictionary<string, object>)value;
+        if (value is Dictionary<string, int> dict)
+        {
+            objRef.setAttachements(target, dict.ToDictionary(x => x.Key, x => registry.Objects[x.Value]));
+        }
     }
 }
