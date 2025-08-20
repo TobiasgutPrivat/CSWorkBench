@@ -51,7 +51,6 @@ public class Registry(IDBConnection db)
             int newId = db.CreateObject(type.AssemblyQualifiedName!, jsonData);
             Objects[newId] = obj;
             ObjectIds[obj] = newId;
-            ObjectReferences[obj] = new ObjectReferences();
             return newId;
         }
     }

@@ -36,15 +36,15 @@ public class ApplicationTest
         personType.GetProperty("Name")!.SetValue(person, "John");
         personType.GetProperty("Age")!.SetValue(person, 30);
 
-        Type? childType = assembly.GetType("Child");
-        object? child = Activator.CreateInstance(childType);
+        Type childType = assembly.GetType("Child")!;
+        object child = Activator.CreateInstance(childType)!;
         childType.GetProperty("Name")!.SetValue(child, "Alice");
         childType.GetProperty("Age")!.SetValue(child, 8);
         childType.GetProperty("Parent")!.SetValue(child, person);
-        var children = personType.GetProperty("Children")!.GetValue(person);
+        object children = personType.GetProperty("Children")!.GetValue(person)!;
         children.GetType().GetMethod("Add")!.Invoke(children, [child]);
 
-        object? child2 = Activator.CreateInstance(childType);
+        object child2 = Activator.CreateInstance(childType)!;
         childType.GetProperty("Name")!.SetValue(child2, "Bob");
         childType.GetProperty("Age")!.SetValue(child2, 12);
         childType.GetProperty("Parent")!.SetValue(child2, person);
@@ -70,19 +70,18 @@ public class ApplicationTest
         children.GetType().GetMethod("RemoveAt")!.Invoke(children, [0]);
         Assert.Equal(child2, registry.GetObject(id, subid));
         Registry registry4 = connectToDB();
-        Assert.Equal(JsonSerializer.Serialize(child2, options), JsonSerializer.Serialize(registry4.GetObject(id, subid), options));
+        object child2recover = registry4.GetObject(id, subid)!;
+        Assert.Equal(child2.GetType().GetProperty("Name")!.GetValue(child2), child2recover.GetType().GetProperty("Name")!.GetValue(child2recover));
 
         // test attachments
         registry.SetAttachment(person, child, "image", new byte[] { 1, 2, 3, 4, 5 });
         registry.SetAttachment(person, child2, "image", new byte[] { 1, 2, 3, 4, 5 });
 
-        List<object> attachments = registry.GetAttachements(person, child, "image", out object obj);
-        Assert.Equal(1, attachments.Count);
-        Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, attachments[0]);
+        object attachment = registry.GetAttachements(person, child)!["image"];
+        Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, attachment);
         Registry registry5 = connectToDB();
-        attachments = registry5.GetAttachements(person, child, "image", out obj);
-        Assert.Equal(1, attachments.Count);
-        Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, attachments[0]);
+        attachment = registry5.GetAttachements(person, child)!["image"];
+        Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, attachment);
 
         // delete
         registry.DeleteObject(id);

@@ -1,0 +1,45 @@
+{
+  "$id": "0",
+  "Name": "John",
+  "Age": 30,
+  "Children": {
+    "$id": "1",
+    "$values": [
+      {
+        "$id": "2",
+        "FavoriteToy": null,
+        "Parent": {
+          "$ref": "0"
+        },
+        "Name": "Alice",
+        "Age": 8,
+        "Children": {
+          "$id": "3",
+          "$values": []
+        },
+        "__Attachments__": {
+          "$id": "4"
+        }
+      },
+      {
+        "$id": "5",
+        "FavoriteToy": null,
+        "Parent": {
+          "$ref": "0"
+        },
+        "Name": "Bob",
+        "Age": 12,
+        "Children": {
+          "$id": "6",
+          "$values": []
+        },
+        "__Attachments__": {
+          "$id": "7"
+        }
+      }
+    ]
+  },
+  "__Attachments__": {
+    "$id": "8"
+  }
+}

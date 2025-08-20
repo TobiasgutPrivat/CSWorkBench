@@ -8,8 +8,7 @@ public class AttachmentsContractResolver(Registry registry, ObjectReferences obj
     {
         var props = base.CreateProperties(type, memberSerialization);
 
-        // Add our special "__Attachments__" property
-        props.Add(new JsonProperty
+        var attachmentsProp = new JsonProperty
         {
             PropertyName = "__Attachments__",
             PropertyType = typeof(List<Dictionary<string, object>>),
@@ -17,7 +16,16 @@ public class AttachmentsContractResolver(Registry registry, ObjectReferences obj
             Writable = true,
             ValueProvider = new AttachmentsValueProvider(registry, objRef),
             DeclaringType = type
-        });
+        };
+
+        // Only serialize if there's actual content
+        attachmentsProp.ShouldSerialize = instance =>
+        {
+            var value = attachmentsProp.ValueProvider.GetValue(instance) as List<Dictionary<string, object>>;
+            return value != null && value.Count > 0;
+        };
+
+        props.Add(attachmentsProp);
 
         return props;
     }
