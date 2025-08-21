@@ -69,6 +69,7 @@ public class ApplicationTest
         Assert.Equal(child2, registry.GetObject(id, subid));
         children.GetType().GetMethod("RemoveAt")!.Invoke(children, [0]);
         Assert.Equal(child2, registry.GetObject(id, subid));
+        registry.SaveObject(person);
         Registry registry4 = connectToDB();
         object child2recover = registry4.GetObject(id, subid)!;
         Assert.Equal(child2.GetType().GetProperty("Name")!.GetValue(child2), child2recover.GetType().GetProperty("Name")!.GetValue(child2recover));
@@ -76,11 +77,14 @@ public class ApplicationTest
         // test attachments
         registry.SetAttachment(person, child, "image", new byte[] { 1, 2, 3, 4, 5 });
         registry.SetAttachment(person, child2, "image", new byte[] { 1, 2, 3, 4, 5 });
+        registry.SaveObject(person);
 
-        object attachment = registry.GetAttachements(person, child)!["image"];
+        object attachment = registry.GetAttachements(person, child2)!["image"];
         Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, attachment);
         Registry registry5 = connectToDB();
-        attachment = registry5.GetAttachements(person, child)!["image"];
+        object personrec = registry5.GetObject(id);
+        object child2rec = registry5.GetObject(id, subid)!;
+        attachment = registry5.GetAttachements(personrec, child2rec)!["image"];
         Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, attachment);
 
         // delete

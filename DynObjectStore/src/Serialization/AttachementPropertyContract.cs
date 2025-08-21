@@ -1,5 +1,6 @@
 using DynObjectStore;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 public class AttachmentsContractResolver(Registry registry, ObjectReferences objRef) : DefaultContractResolver
@@ -11,17 +12,19 @@ public class AttachmentsContractResolver(Registry registry, ObjectReferences obj
         var attachmentsProp = new JsonProperty
         {
             PropertyName = "__Attachments__",
-            PropertyType = typeof(List<Dictionary<string, object>>),
+            PropertyType = typeof(object),
             Readable = true,
             Writable = true,
             ValueProvider = new AttachmentsValueProvider(registry, objRef),
-            DeclaringType = type
+            DeclaringType = type,
+            HasMemberAttribute = true,
+            UnderlyingName = "__Attachments__"
         };
 
         // Only serialize if there's actual content
         attachmentsProp.ShouldSerialize = instance =>
         {
-            var value = attachmentsProp.ValueProvider.GetValue(instance) as List<Dictionary<string, object>>;
+            var value = attachmentsProp.ValueProvider.GetValue(instance) as Dictionary<string, int>;
             return value != null && value.Count > 0;
         };
 
@@ -36,16 +39,20 @@ public class AttachmentsValueProvider(Registry registry, ObjectReferences objRef
 
     public object? GetValue(object target)
     {
-        Dictionary<string, object>? dict = objRef.getAttachements(target);
-        if (dict == null) return null;
-        return dict.ToDictionary(x => x.Key, x => registry.ObjectIds[x.Value]);
+        Dictionary<string, object>? attachements = objRef.getAttachements(target);
+        if (attachements == null) return null;
+        Dictionary<string, int> attachementIds = attachements.ToDictionary(x => x.Key, x => registry.ObjectIds[x.Value]);
+        return attachementIds;
     }
 
     public void SetValue(object target, object? value)
     {
-        if (value is Dictionary<string, int> dict)
+        Console.WriteLine($"SetValue called for {target.GetType().Name}");
+
+        if (value is JObject jObj)
         {
-            objRef.setAttachements(target, dict.ToDictionary(x => x.Key, x => registry.Objects[x.Value]));
+            var dict = jObj.ToObject<Dictionary<string, int>>();
+            objRef.setAttachements(target, dict!.ToDictionary(x => x.Key, x => registry.Objects[x.Value]));
         }
     }
 }

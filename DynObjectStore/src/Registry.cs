@@ -132,6 +132,7 @@ public class Registry(IDBConnection db)
 
     public Dictionary<string, object>? GetAttachements(object parent, object subObject)
     {
+        GetObject(ObjectIds[parent]);
         return ObjectReferences[parent].getAttachements(subObject);
     }
 

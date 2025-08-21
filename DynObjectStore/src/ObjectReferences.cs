@@ -1,11 +1,11 @@
 public class ObjectReferences
 {
-    // stores id's of objects used for serialization binding it to instances
+    // stores id's of objects during deserialization to use same id's for serialization (allows more consistent identification)
     // also manages attachments
 
     private Dictionary<object, int> SubObjectIds = [];
     private Dictionary<int, object> SubObjects = [];
-    private Dictionary<object, Dictionary<string, object>> Attachements = [];
+    private Dictionary<object, Dictionary<string, object>> Attachements = []; // maybe into registry
     public int nextId = 0;
 
     public void addSubObject(object obj, int nextId)
