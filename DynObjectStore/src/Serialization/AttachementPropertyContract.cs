@@ -47,12 +47,12 @@ public class AttachmentsValueProvider(Registry registry, ObjectReferences objRef
 
     public void SetValue(object target, object? value)
     {
-        Console.WriteLine($"SetValue called for {target.GetType().Name}");
+        //     Console.WriteLine($"SetValue called for {target.GetType().Name}");
 
-        if (value is JObject jObj)
-        {
-            var dict = jObj.ToObject<Dictionary<string, int>>();
-            objRef.setAttachements(target, dict!.ToDictionary(x => x.Key, x => registry.Objects[x.Value]));
-        }
+        //     if (value is JObject jObj)
+        //     {
+        //         var dict = jObj.ToObject<Dictionary<string, int>>();
+        //         objRef.setAttachements(target, dict!.ToDictionary(x => x.Key, x => registry.Objects[x.Value]));
+        //     }
     }
 }
