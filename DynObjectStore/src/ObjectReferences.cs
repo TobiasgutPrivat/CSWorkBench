@@ -1,3 +1,5 @@
+namespace DynObjectStore;
+
 public class ObjectReferences
 {
     // stores id's of objects during deserialization to use same id's for serialization (allows more consistent identification)

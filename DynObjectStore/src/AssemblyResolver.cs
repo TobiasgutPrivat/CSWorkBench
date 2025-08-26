@@ -1,3 +1,5 @@
+namespace DynObjectStore;
+
 using System.Reflection;
 
 public class AssemblyResolver
