@@ -4,7 +4,7 @@ using System.Collections;
 using System.Reflection;
 using Newtonsoft.Json;
 
-public class Serializer(Registry registry, ObjectReferences refs)
+public class Serializer(Registry registry, RootObject refs)
 {
     public string Serialize(object obj)
     {
@@ -90,7 +90,7 @@ public class Serializer(Registry registry, ObjectReferences refs)
             foreach (var attachement in attachments)
             {
                 writer.WritePropertyName(attachement.Key);
-                WriteJson(writer, registry.ObjectIds[attachement.Value]);
+                WriteJson(writer, attachement.Value.id);
             }
             writer.WriteEndObject();
         }

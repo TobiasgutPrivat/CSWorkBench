@@ -1,13 +1,15 @@
 namespace DynObjectStore;
 
-public class ObjectReferences
+public class RootObject
 {
     // stores id's of objects during deserialization to use same id's for serialization (allows more consistent identification)
     // also manages attachments
 
+    public object obj = null!;
+    public int id;
     private Dictionary<object, int> SubObjectIds = [];
     private Dictionary<int, object> SubObjects = [];
-    private Dictionary<object, Dictionary<string, object>> Attachements = []; // maybe into registry
+    private Dictionary<object, Dictionary<string, RootObject>> Attachements = []; // maybe into registry
     public int nextId = 0;
 
     public void addSubObject(object obj, int nextId)
@@ -49,7 +51,7 @@ public class ObjectReferences
         nextId = Math.Max(nextId, id + 1);
         SubObjectIds[obj] = id;
         SubObjects[id] = obj;
-        Attachements[obj] = new Dictionary<string, object>();
+        Attachements[obj] = new Dictionary<string, RootObject>();
         return id;
     }
 
@@ -65,22 +67,22 @@ public class ObjectReferences
             nextId++;
             SubObjectIds[obj] = id;
             SubObjects[id] = obj;
-            Attachements[obj] = new Dictionary<string, object>();
+            Attachements[obj] = new Dictionary<string, RootObject>();
             return id;
         }
     }
 
-    public void addAttachement(object obj, string name, object value)
+    public void addAttachement(object obj, string name, RootObject attachement)
     {
         if (!Attachements.TryGetValue(obj, out var attachments))
         {
-            attachments = new Dictionary<string, object>();
+            attachments = new Dictionary<string, RootObject>();
             Attachements[obj] = attachments;
         }
-        attachments[name] = value;
+        attachments[name] = attachement;
     }
 
-    internal void setAttachements(object obj, Dictionary<string, object> value)
+    internal void setAttachements(object obj, Dictionary<string, RootObject> value)
     {
         Attachements[obj] = value;
     }
@@ -90,7 +92,7 @@ public class ObjectReferences
         Attachements[obj].Remove(name);
     }
 
-    public Dictionary<string, object>? getAttachements(object obj)
+    public Dictionary<string, RootObject>? getAttachements(object obj)
     {
         if (SubObjectIds.TryGetValue(obj, out var attachments))
         {

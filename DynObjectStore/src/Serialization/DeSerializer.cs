@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace DynObjectStore;
 
-public class Deserializer(Registry registry, ObjectReferences refs)
+public class Deserializer(Registry registry, RootObject refs)
 {
     public object? Deserialize(string json, Type type)
     {
