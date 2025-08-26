@@ -10,22 +10,12 @@ public class Registry(IDBConnection db)
     internal Dictionary<object, int> ObjectIds = []; //TODO maybe remove this
     internal Dictionary<object, ObjectReferences> ObjectReferences = []; // rootobject -> subobject -> id (created from serialization)
 
-    private static readonly JsonSerializerSettings options = new JsonSerializerSettings
-    {
-        PreserveReferencesHandling = PreserveReferencesHandling.All,
-        ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-        // TypeNameHandling = TypeNameHandling.All, // not really needed, might be safer in some cases
-        ContractResolver = new FullAccessContractResolver(),
-        Formatting = Formatting.Indented, // not needed, but nice for formatting
-    };
-
     public void SaveObject(int id)
     {
         if (Objects.TryGetValue(id, out object? obj))
         {
-            options.ReferenceResolverProvider = () => new RegistryReferenceResolver(ObjectReferences[obj]);
-            options.ContractResolver = new AttachmentsContractResolver(this, ObjectReferences[obj]);
-            string jsonData = JsonConvert.SerializeObject(obj, options);
+            Serializer serializer = new Serializer(ObjectReferences[obj]);
+            string jsonData = serializer.Serialize(obj);
             db.UpdateObject(id, jsonData);
         }
     }
@@ -37,9 +27,8 @@ public class Registry(IDBConnection db)
             objRef = new ObjectReferences();
             ObjectReferences[obj] = objRef;
         }
-        options.ReferenceResolverProvider = () => new RegistryReferenceResolver(objRef);
-        options.ContractResolver = new AttachmentsContractResolver(this, objRef);
-        string jsonData = JsonConvert.SerializeObject(obj, options);
+        Serializer serializer = new Serializer(objRef);
+        string jsonData = serializer.Serialize(obj);
         if (ObjectIds.TryGetValue(obj, out int id))
         {
             db.UpdateObject(id, jsonData);
@@ -88,10 +77,9 @@ public class Registry(IDBConnection db)
         Type type = Type.GetType(className) ?? throw new Exception($"Type {className} not found.");
 
         ObjectReferences objRef = new ObjectReferences();
-        options.ReferenceResolverProvider = () => new RegistryReferenceResolver(objRef);
-        options.ContractResolver = new AttachmentsContractResolver(this, objRef);
+        Deserializer deserializer = new Deserializer(objRef);
 
-        object obj = JsonConvert.DeserializeObject(data, type, options) ?? throw new Exception($"Object with ID {id} not found.");
+        object obj = deserializer.Deserialize(data, type) ?? throw new Exception($"Deserialization failed.");
         Objects[id] = obj;
         ObjectIds[obj] = id;
         ObjectReferences[obj] = objRef;
