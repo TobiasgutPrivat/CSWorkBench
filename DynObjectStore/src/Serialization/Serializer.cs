@@ -1,10 +1,10 @@
+namespace DynObjectStore;
+
 using System.Collections;
 using System.Reflection;
 using Newtonsoft.Json;
 
-namespace DynObjectStore;
-
-public class Serializer(ObjectReferences refs)
+public class Serializer(Registry registry, ObjectReferences refs)
 {
     public string Serialize(object obj)
     {
@@ -20,7 +20,7 @@ public class Serializer(ObjectReferences refs)
         return sw.ToString();
     }
 
-    public HashSet<int> idsWritten = new HashSet<int>();
+    public HashSet<int> idsWritten = new();
 
     public void WriteJson(JsonWriter writer, object? value)
     {
@@ -39,7 +39,25 @@ public class Serializer(ObjectReferences refs)
             return;
         }
 
-        // Handle references
+        // Structs (value types) should serialize inline, not by ref
+        if (type.IsValueType)
+        {
+            writer.WriteStartObject();
+            writer.WritePropertyName("$type");
+            writer.WriteValue(type.AssemblyQualifiedName);
+
+            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (field.IsDefined(typeof(NonSerializedAttribute), false)) continue;
+                writer.WritePropertyName(field.Name);
+                WriteJson(writer, field.GetValue(value));
+            }
+
+            writer.WriteEndObject();
+            return;
+        }
+
+        // Handle references for reference types
         int id = refs.registerSubObject(value);
         if (idsWritten.Contains(id))
         {
@@ -59,7 +77,7 @@ public class Serializer(ObjectReferences refs)
         writer.WriteValue(id);
         idsWritten.Add(id);
 
-        // Write type info (optional but helps for polymorphic)
+        // Write type info
         writer.WritePropertyName("$type");
         writer.WriteValue(type.AssemblyQualifiedName);
 
@@ -69,16 +87,31 @@ public class Serializer(ObjectReferences refs)
         {
             writer.WritePropertyName("$attachments");
             writer.WriteStartObject();
-            foreach (var kv in attachments)
+            foreach (var attachement in attachments)
             {
-                writer.WritePropertyName(kv.Key);
-                WriteJson(writer, kv.Value);
+                writer.WritePropertyName(attachement.Key);
+                WriteJson(writer, registry.ObjectIds[attachement.Value]);
             }
             writer.WriteEndObject();
         }
 
-        // Handle collections
-        if (typeof(IEnumerable).IsAssignableFrom(type) && type != typeof(string))
+        // Handle collections (ensure $id written before $values)
+        if (typeof(IDictionary).IsAssignableFrom(type))
+        {
+            writer.WritePropertyName("$values");
+            writer.WriteStartArray();
+            foreach (DictionaryEntry kv in (IDictionary)value)
+            {
+                writer.WriteStartObject();
+                writer.WritePropertyName("Key");
+                WriteJson(writer, kv.Key);
+                writer.WritePropertyName("Value");
+                WriteJson(writer, kv.Value);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+        }
+        else if (typeof(IEnumerable).IsAssignableFrom(type) && type != typeof(string))
         {
             writer.WritePropertyName("$values");
             writer.WriteStartArray();
@@ -90,20 +123,20 @@ public class Serializer(ObjectReferences refs)
         }
         else
         {
-            // Handle fields and properties (public + private)
-            var members = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            foreach (var field in members)
+            // handle fields (only fields because: https://chatgpt.com/share/68ad9143-a9e4-8007-b614-bd744eeeb8c0)
+            Type? currtype = type;
+            List<FieldInfo> fields = new List<FieldInfo>();
+            while (currtype != null)
             {
-                writer.WritePropertyName(field.Name);
-                WriteJson(writer, field.GetValue(value));
+                fields.AddRange(currtype.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly));
+                currtype = currtype.BaseType;
             }
 
-            var props = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            foreach (var prop in props)
+            foreach (var field in fields)
             {
-                if (!prop.CanRead) continue;
-                writer.WritePropertyName(prop.Name);
-                WriteJson(writer, prop.GetValue(value));
+                var val = field.GetValue(value);
+                writer.WritePropertyName(field.Name);
+                WriteJson(writer, val);
             }
         }
 

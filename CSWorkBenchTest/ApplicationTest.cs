@@ -62,7 +62,7 @@ public class ApplicationTest
         Assert.NotNull(person2);
         Assert.IsType(personType, person2);
 
-        Assert.Equal(JsonSerializer.Serialize(person, options), JsonSerializer.Serialize(person, options));
+        Assert.Equal(JsonSerializer.Serialize(person, options), JsonSerializer.Serialize(person2, options));
 
         // test changing paths
         int subid = registry.GetSubId(person, child2) ?? throw new Exception("SubId not found.");

@@ -14,7 +14,7 @@ public class Registry(IDBConnection db)
     {
         if (Objects.TryGetValue(id, out object? obj))
         {
-            Serializer serializer = new Serializer(ObjectReferences[obj]);
+            Serializer serializer = new Serializer(this, ObjectReferences[obj]);
             string jsonData = serializer.Serialize(obj);
             db.UpdateObject(id, jsonData);
         }
@@ -27,7 +27,7 @@ public class Registry(IDBConnection db)
             objRef = new ObjectReferences();
             ObjectReferences[obj] = objRef;
         }
-        Serializer serializer = new Serializer(objRef);
+        Serializer serializer = new Serializer(this, objRef);
         string jsonData = serializer.Serialize(obj);
         if (ObjectIds.TryGetValue(obj, out int id))
         {
@@ -77,7 +77,7 @@ public class Registry(IDBConnection db)
         Type type = Type.GetType(className) ?? throw new Exception($"Type {className} not found.");
 
         ObjectReferences objRef = new ObjectReferences();
-        Deserializer deserializer = new Deserializer(objRef);
+        Deserializer deserializer = new Deserializer(this, objRef);
 
         object obj = deserializer.Deserialize(data, type) ?? throw new Exception($"Deserialization failed.");
         Objects[id] = obj;

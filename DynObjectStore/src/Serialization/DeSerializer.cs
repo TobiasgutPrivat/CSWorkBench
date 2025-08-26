@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace DynObjectStore;
 
-public class Deserializer(ObjectReferences refs)
+public class Deserializer(Registry registry, ObjectReferences refs)
 {
     public object? Deserialize(string json, Type type)
     {
@@ -42,6 +42,24 @@ public class Deserializer(ObjectReferences refs)
             actualType = Type.GetType(jToken["$type"]!.Value<string>()) ?? objectType;
         }
 
+        // Value types (structs) → just populate
+        if (actualType.IsValueType)
+        {
+            object structInstance = FormatterServices.GetUninitializedObject(actualType);
+
+            foreach (var field in actualType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                var token = jToken[field.Name];
+                if (token != null)
+                {
+                    field.SetValueDirect(__makeref(structInstance),
+                        ReadJson(token.CreateReader(), field.FieldType));
+                }
+            }
+
+            return structInstance;
+        }
+
         // Create uninitialized instance
         object instance;
         var ctor = actualType.GetConstructor(Type.EmptyTypes);
@@ -60,24 +78,53 @@ public class Deserializer(ObjectReferences refs)
         var attachmentsToken = jToken["$attachments"];
         if (attachmentsToken != null && attachmentsToken.Type == JTokenType.Object)
         {
-            var dict = new Dictionary<string, object>();
+            Dictionary<string, int> dict = new Dictionary<string, int>();
             foreach (var prop in (JObject)attachmentsToken)
             {
-                dict[prop.Key] = ReadJson(prop.Value.CreateReader(), typeof(object))!;
+                dict[prop.Key] = prop.Value!.Value<int>();
             }
-            refs.setAttachements(instance, dict);
+            refs.setAttachements(instance, dict.ToDictionary(x => x.Key, x => registry.GetObject(x.Value)));
         }
 
-        // Handle collections
+        // Handle dictionaries
+        if (typeof(IDictionary).IsAssignableFrom(actualType))
+        {
+            var dict = (IDictionary)(Activator.CreateInstance(actualType)
+                         ?? FormatterServices.GetUninitializedObject(actualType));
+            var valuesToken = jToken["$values"];
+            if (valuesToken != null)
+            {
+                foreach (var kvToken in valuesToken)
+                {
+                    var key = ReadJson(kvToken["Key"]!.CreateReader(), typeof(object));
+                    var val = ReadJson(kvToken["Value"]!.CreateReader(), typeof(object));
+                    dict.Add(key!, val);
+                }
+            }
+            return dict;
+        }
+
+        // Handle lists/collections
         if (typeof(IEnumerable).IsAssignableFrom(actualType) && actualType != typeof(string))
         {
             var valuesToken = jToken["$values"];
-            if (valuesToken != null && typeof(IList).IsAssignableFrom(actualType))
+            if (valuesToken != null)
             {
-                var list = (IList)Activator.CreateInstance(actualType)!;
+                var elementType = actualType.IsGenericType ? actualType.GetGenericArguments()[0] : typeof(object);
+
+                IList list;
+                if (typeof(IList).IsAssignableFrom(actualType) && !actualType.IsInterface && !actualType.IsAbstract)
+                {
+                    list = (IList)(Activator.CreateInstance(actualType)
+                           ?? FormatterServices.GetUninitializedObject(actualType));
+                }
+                else
+                {
+                    list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType))!;
+                }
+
                 foreach (var itemToken in valuesToken)
                 {
-                    var elementType = actualType.IsGenericType ? actualType.GetGenericArguments()[0] : typeof(object);
                     list.Add(ReadJson(itemToken.CreateReader(), elementType)!);
                 }
                 return list;
@@ -85,23 +132,20 @@ public class Deserializer(ObjectReferences refs)
         }
 
         // Populate fields
-        foreach (var field in actualType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+        Type? currtype = actualType;
+        List<FieldInfo> fields = new List<FieldInfo>();
+        while (currtype != null)
+        {
+            fields.AddRange(currtype.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly));
+            currtype = currtype.BaseType;
+        }
+
+        foreach (var field in fields)
         {
             var token = jToken[field.Name];
             if (token != null)
             {
                 field.SetValue(instance, ReadJson(token.CreateReader(), field.FieldType));
-            }
-        }
-
-        // Populate properties
-        foreach (var prop in actualType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-        {
-            if (!prop.CanWrite) continue;
-            var token = jToken[prop.Name];
-            if (token != null)
-            {
-                prop.SetValue(instance, ReadJson(token.CreateReader(), prop.PropertyType));
             }
         }
 
