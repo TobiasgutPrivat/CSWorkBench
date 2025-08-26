@@ -62,17 +62,29 @@ public class Deserializer(Registry registry, ObjectReferences refs)
 
         // Create uninitialized instance
         object instance;
-        var ctor = actualType.GetConstructor(Type.EmptyTypes);
-        if (ctor != null)
+        if (actualType.IsArray)
         {
-            instance = ctor.Invoke(null);
+            // For arrays we defer actual creation until we know element count
+            instance = null!;
         }
         else
         {
-            instance = FormatterServices.GetUninitializedObject(actualType);
+            var ctor = actualType.GetConstructor(Type.EmptyTypes);
+            if (ctor != null)
+            {
+                instance = ctor.Invoke(null);
+            }
+            else
+            {
+                instance = FormatterServices.GetUninitializedObject(actualType);
+            }
+
+            // Register immediately so $ref works and attachments can bind
         }
+
         int id = jToken["$id"]?.Value<int>() ?? refs.nextId;
-        refs.registerSubObject(instance, id);
+        if (instance != null) // arrays will be handled after creation
+            refs.registerSubObject(instance, id);
 
         // Load attachments
         var attachmentsToken = jToken["$attachments"];
@@ -86,11 +98,36 @@ public class Deserializer(Registry registry, ObjectReferences refs)
             refs.setAttachements(instance, dict.ToDictionary(x => x.Key, x => registry.GetObject(x.Value)));
         }
 
+        // Handle arrays
+        if (actualType.IsArray)
+        {
+            var elementType = actualType.GetElementType() ?? typeof(object);
+            var valuesToken = jToken["$values"];
+            if (valuesToken != null)
+            {
+                var tempList = new List<object?>();
+                foreach (var itemToken in valuesToken)
+                {
+                    tempList.Add(ReadJson(itemToken.CreateReader(), elementType));
+                }
+
+                var array = Array.CreateInstance(elementType, tempList.Count);
+                for (int i = 0; i < tempList.Count; i++)
+                {
+                    array.SetValue(tempList[i], i);
+                }
+
+                // Register the actual array now (replacing the placeholder)
+                refs.registerSubObject(array, id);
+                return array;
+            }
+            return Array.CreateInstance(elementType, 0);
+        }
+
         // Handle dictionaries
         if (typeof(IDictionary).IsAssignableFrom(actualType))
         {
-            var dict = (IDictionary)(Activator.CreateInstance(actualType)
-                         ?? FormatterServices.GetUninitializedObject(actualType));
+            var dict = (IDictionary)instance;
             var valuesToken = jToken["$values"];
             if (valuesToken != null)
             {
@@ -112,16 +149,7 @@ public class Deserializer(Registry registry, ObjectReferences refs)
             {
                 var elementType = actualType.IsGenericType ? actualType.GetGenericArguments()[0] : typeof(object);
 
-                IList list;
-                if (typeof(IList).IsAssignableFrom(actualType) && !actualType.IsInterface && !actualType.IsAbstract)
-                {
-                    list = (IList)(Activator.CreateInstance(actualType)
-                           ?? FormatterServices.GetUninitializedObject(actualType));
-                }
-                else
-                {
-                    list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType))!;
-                }
+                IList list = instance as IList;
 
                 foreach (var itemToken in valuesToken)
                 {
