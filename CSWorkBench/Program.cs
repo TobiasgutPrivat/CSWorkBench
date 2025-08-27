@@ -1,7 +1,6 @@
 using BlazorStrap;
 using CSWorkBench.Components;
 using DynObjectStore;
-using Npgsql;
 
 AssemblyResolver.AddAssemblyResolvers();
 
@@ -13,19 +12,8 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddBlazorStrap();
 
-// PostgreSQL connection setup
-var connBuilder = new NpgsqlConnectionStringBuilder
-{
-    Host = "localhost",
-    Port = 5432,
-    Username = "postgres",
-    Password = "postgres",
-    Database = "CSWorkBenchDB",
-    SslMode = SslMode.Disable
-};
-
-IDBConnection conn = new PgDBConnection(connBuilder.ConnectionString);
-conn.Open();
+// connection setup
+IDBConnection conn = new SQLiteDBConnection(@"..\data\test.db"); //TODO this is temp
 var registry = new Registry(conn);
 builder.Services.AddSingleton(registry);
 
@@ -46,5 +34,9 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.Lifetime.ApplicationStarted.Register(() => conn.Open());
+
+app.Lifetime.ApplicationStopping.Register(() => conn.Dispose());
 
 app.Run();

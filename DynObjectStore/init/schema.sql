@@ -1,7 +1,0 @@
--- DROP TABLE IF EXISTS "Object";
-
-CREATE TABLE IF NOT EXISTS "Object" (
-    "id" SERIAL PRIMARY KEY,
-    "class" VARCHAR(255) NOT NULL,
-    "data" TEXT NOT NULL
-);

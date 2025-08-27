@@ -11,7 +11,17 @@ public class PgDBConnection : IDBConnection
         this.connection = new NpgsqlConnection(connString);
     }
 
-    public async Task Open() => await connection.OpenAsync();
+    public async Task Open()
+    {
+        await connection.OpenAsync();
+        var cmd = new NpgsqlCommand(
+            "CREATE TABLE IF NOT EXISTS \"Object\" (\n" +
+            "    \"id\" SERIAL PRIMARY KEY,\n" +
+            "    \"class\" VARCHAR(255) NOT NULL,\n" +
+            "    \"data\" TEXT NOT NULL\n" +
+            ");", connection);
+        await cmd.ExecuteNonQueryAsync();
+    }
 
     public async Task Dispose()
     {
