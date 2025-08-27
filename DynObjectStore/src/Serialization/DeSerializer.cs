@@ -75,8 +75,8 @@ internal class Deserializer(RootObject rootObject)
                 dict[prop.Key] = prop.Value!.Value<int>();
             }
 
-            attachements = dict.Where(x => rootObject.registry.GetObject(x.Value) != null)
-                .ToDictionary(x => x.Key, x => rootObject.registry.GetObject(x.Value)!);
+            attachements = dict.Where(x => rootObject.registry.GetObject(x.Value).GetAwaiter().GetResult() != null)
+                .ToDictionary(x => x.Key, x => rootObject.registry.GetObject(x.Value).GetAwaiter().GetResult()!);
 
             if (attachements.Count == 0) attachements = null;
         }

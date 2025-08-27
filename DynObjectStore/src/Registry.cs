@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace DynObjectStore;
 
 public class Registry(IDBConnection db)
@@ -6,14 +8,14 @@ public class Registry(IDBConnection db)
 
     internal readonly Dictionary<int, WeakReference<RootObject>> objects = [];
 
-    public void SaveObject(RootObject rootObject)
+    public async Task SaveObject(RootObject rootObject)
     {
         Serializer serializer = new Serializer(rootObject);
         string jsonData = serializer.Serialize(rootObject.root);
-        db.UpdateObject(rootObject.id, jsonData);
+        await db.UpdateObject(rootObject.id, jsonData);
     }
 
-    public RootObject SaveObject(object obj)
+    public async Task<RootObject> SaveObject(object obj)
     {
         RootObject rootObject = new RootObject();
         rootObject.root = obj;
@@ -22,7 +24,7 @@ public class Registry(IDBConnection db)
         string jsonData = serializer.Serialize(obj);
 
         Type type = obj.GetType();
-        int newId = db.CreateObject(type.AssemblyQualifiedName!, jsonData);
+        int newId = await db.CreateObject(type.AssemblyQualifiedName!, jsonData);
 
         objects[newId] = new WeakReference<RootObject>(rootObject);
         rootObject.id = newId;
@@ -30,19 +32,19 @@ public class Registry(IDBConnection db)
         return rootObject;
     }
 
-    public void DeleteObject(RootObject obj)
+    public async Task DeleteObject(RootObject obj)
     {
-        db.DeleteObject(obj.id);
+        await db.DeleteObject(obj.id);
         objects.Remove(obj.id);
     }
 
-    public void DeleteObject(int id)
+    public async Task DeleteObject(int id)
     {
-        db.DeleteObject(id);
+        await db.DeleteObject(id);
         objects.Remove(id);
     }
 
-    public RootObject? GetObject(int id)
+    public async Task<RootObject?> GetObject(int id)
     {
         if (objects.TryGetValue(id, out var weakRef))
         {
@@ -53,7 +55,7 @@ public class Registry(IDBConnection db)
             objects.Remove(id);
         }
 
-        db.GetObject(id, out string? className, out string? data);
+        (string? className, string? data) = await db.GetObject(id);
         if (className == null || data == null) return null;
 
         Type type = Type.GetType(className) ?? throw new Exception($"Type {className} not found.");

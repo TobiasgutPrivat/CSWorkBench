@@ -1,65 +1,73 @@
 namespace DynObjectStore;
 
 using Npgsql;
+
 public class PgDBConnection : IDBConnection
 {
-    // Handles all SQL operations
-
-    private NpgsqlConnection connection;
+    private readonly NpgsqlConnection connection;
 
     public PgDBConnection(string connString)
     {
         this.connection = new NpgsqlConnection(connString);
-        this.connection.Open();
     }
 
-    public void Close()
+    public async Task Open() => await connection.OpenAsync();
+
+    public async Task Dispose()
     {
-        this.connection.Close();
+        await connection.CloseAsync();
+        await connection.DisposeAsync();
     }
 
-    public int CreateObject(string Class, string Data)
+    public async Task<int> CreateObject(string className, string data)
     {
-        var createCmd = new NpgsqlCommand(
-        "INSERT INTO \"Object\" (\"class\", \"data\") VALUES (@class, @data) RETURNING \"id\";", this.connection);
-        createCmd.Parameters.AddWithValue("class", Class);
-        createCmd.Parameters.AddWithValue("data", Data);
-        var objectId = (int)createCmd.ExecuteScalar()!;
-        return objectId;
+        using var cmd = new NpgsqlCommand(
+            "INSERT INTO \"Object\" (\"class\", \"data\") VALUES (@class, @data) RETURNING \"id\";",
+            this.connection);
+
+        cmd.Parameters.AddWithValue("class", className);
+        cmd.Parameters.AddWithValue("data", data);
+
+        var result = await cmd.ExecuteScalarAsync();
+        return (int)result!;
     }
 
-    public void GetObject(int objectId, out string? Class, out string? data) //return (class, data)
+    public async Task<(string? typeName, string? jsonData)> GetObject(int objectId)
     {
-        var readCmd = new NpgsqlCommand(
-            "SELECT \"class\", \"data\" FROM \"Object\" WHERE \"id\" = @id;", this.connection);
-        readCmd.Parameters.AddWithValue("id", objectId);
-        using var reader = readCmd.ExecuteReader();
-        if (reader.Read())
+        using var cmd = new NpgsqlCommand(
+            "SELECT \"class\", \"data\" FROM \"Object\" WHERE \"id\" = @id;",
+            this.connection);
+
+        cmd.Parameters.AddWithValue("id", objectId);
+
+        using var reader = await cmd.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
         {
-            Class = reader.GetString(0);
-            data = reader.GetString(1);
+            return (reader.GetString(0), reader.GetString(1));
         }
-        else
-        {
-            Class = null;
-            data = null;
-        }
+        return (null, null);
     }
 
-    public void UpdateObject(int objectId, string newData)
+    public async Task UpdateObject(int objectId, string newData)
     {
-        var updateCmd = new NpgsqlCommand(
-            "UPDATE \"Object\" SET \"data\" = @newData WHERE \"id\" = @id;", this.connection);
-        updateCmd.Parameters.AddWithValue("newData", newData);
-        updateCmd.Parameters.AddWithValue("id", objectId);
-        updateCmd.ExecuteNonQuery();
+        using var cmd = new NpgsqlCommand(
+            "UPDATE \"Object\" SET \"data\" = @newData WHERE \"id\" = @id;",
+            this.connection);
+
+        cmd.Parameters.AddWithValue("newData", newData);
+        cmd.Parameters.AddWithValue("id", objectId);
+
+        await cmd.ExecuteNonQueryAsync();
     }
 
-    public void DeleteObject(int objectId)
+    public async Task DeleteObject(int objectId)
     {
-        var deleteCmd = new NpgsqlCommand(
-            "DELETE FROM \"Object\" WHERE \"id\" = @id;", this.connection);
-        deleteCmd.Parameters.AddWithValue("id", objectId);
-        deleteCmd.ExecuteNonQuery();
+        using var cmd = new NpgsqlCommand(
+            "DELETE FROM \"Object\" WHERE \"id\" = @id;",
+            this.connection);
+
+        cmd.Parameters.AddWithValue("id", objectId);
+
+        await cmd.ExecuteNonQueryAsync();
     }
 }

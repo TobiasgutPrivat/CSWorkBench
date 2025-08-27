@@ -2,9 +2,10 @@ namespace DynObjectStore;
 
 public interface IDBConnection
 {
-    void Close();
-    int CreateObject(string Class, string Data);
-    void DeleteObject(int objectId);
-    void UpdateObject(int objectId, string newData);
-    void GetObject(int objectId, out string? Class, out string? data);
+    Task Dispose();
+    Task Open();
+    Task<int> CreateObject(string typeName, string jsonData);
+    Task UpdateObject(int id, string jsonData);
+    Task DeleteObject(int id);
+    Task<(string? typeName, string? jsonData)> GetObject(int id);
 }

@@ -47,9 +47,9 @@ public class RootObject
         }
         attachments[name] = attachement;
     }
-    public void AddAttachement(object obj, string name, object attachement)
+    public async Task AddAttachement(object obj, string name, object attachement)
     {
-        AddAttachement(obj, name, registry.SaveObject(attachement));
+        AddAttachement(obj, name, await registry.SaveObject(attachement));
     }
 
     internal void SetAttachements(object obj, Dictionary<string, RootObject>? value)

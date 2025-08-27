@@ -3,12 +3,13 @@ namespace CSWorkBenchTest;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using DynObjectStore;
 using Npgsql;
 
 public class ApplicationTest
 {
-    public static Registry connectToDB()
+    public static async Task<Registry> connectToDB()
     {
         var connBuilder = new NpgsqlConnectionStringBuilder
         {
@@ -20,11 +21,12 @@ public class ApplicationTest
             SslMode = SslMode.Disable
         };
         IDBConnection connection = new PgDBConnection(connBuilder.ConnectionString);
+        await connection.Open();
         return new Registry(connection);
     }
 
     [Fact]
-    public void Object()
+    public async Task Object()
     {
         // setup
         Assembly assembly = Assembly.LoadFrom(@"..\..\..\..\TestClasses\bin\Debug\net8.0\TestClasses.dll");
@@ -53,44 +55,44 @@ public class ApplicationTest
         JsonSerializerOptions options = new JsonSerializerOptions() { ReferenceHandler = ReferenceHandler.Preserve };
 
         // testing
-        Registry registry = connectToDB();
-        Registry registry2 = connectToDB();
+        Registry registry = await connectToDB();
+        Registry registry2 = await connectToDB();
 
-        RootObject person = registry.SaveObject(personObj);
+        RootObject person = await registry.SaveObject(personObj);
 
-        RootObject? person2 = registry2.GetObject(person.id);
+        RootObject? person2 = await registry2.GetObject(person.id);
         Assert.NotNull(person2);
         Assert.IsType(personType, person2.root);
 
         Assert.Equal(JsonSerializer.Serialize(person, options), JsonSerializer.Serialize(person2, options));
 
         // test changing paths
-        int subid = person.getSubObjectId(child2) ?? throw new Exception("SubId not found.");
-        Assert.Equal(child2, person.getSubObject(subid));
+        int subid = person.GetSubObjectId(child2) ?? throw new Exception("SubId not found.");
+        Assert.Equal(child2, person.GetSubObject(subid));
         children.GetType().GetMethod("RemoveAt")!.Invoke(children, [0]);
-        Assert.Equal(child2, person.getSubObject(subid));
-        registry.SaveObject(person);
-        Registry registry4 = connectToDB();
-        object child2recover = registry4.GetObject(person.id)!.getSubObject(subid) ?? throw new Exception("Object not found.");
+        Assert.Equal(child2, person.GetSubObject(subid));
+        await registry.SaveObject(person);
+        Registry registry4 = await connectToDB();
+        object child2recover = (await registry4.GetObject(person.id))!.GetSubObject(subid) ?? throw new Exception("Object not found.");
         Assert.Equal(child2.GetType().GetProperty("Name")!.GetValue(child2), child2recover.GetType().GetProperty("Name")!.GetValue(child2recover));
 
         // test attachments
-        person.addAttachement(child, "image", new byte[] { 1, 2, 3, 4, 5 });
-        person.addAttachement(child2, "image", new byte[] { 1, 2, 3, 4, 5 });
-        registry.SaveObject(person);
+        await person.AddAttachement(child, "image", new byte[] { 1, 2, 3, 4, 5 });
+        await person.AddAttachement(child2, "image", new byte[] { 1, 2, 3, 4, 5 });
+        await registry.SaveObject(person);
 
-        RootObject attachment = person.getAttachements(child2)!["image"];
+        RootObject attachment = person.GetAttachements(child2)!["image"];
         Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, attachment.root);
-        Registry registry5 = connectToDB();
-        RootObject person5 = registry5.GetObject(person.id)!;
-        object child2rec = person5.getSubObject(subid)!;
-        RootObject attachment2 = person5.getAttachements(child2rec)!["image"];
+        Registry registry5 = await connectToDB();
+        RootObject person5 = (await registry5.GetObject(person.id))!;
+        object child2rec = person5.GetSubObject(subid)!;
+        RootObject attachment2 = person5.GetAttachements(child2rec)!["image"];
         Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, attachment2.root);
 
         // delete
-        registry.DeleteObject(person.id);
-        Registry registry3 = connectToDB();
-        object? person3 = registry3.GetObject(person.id);
-        Assert.Null(person3);
+        await registry.DeleteObject(person.id);
+        Registry registry3 = await connectToDB();
+        RootObject? person3 = await registry3.GetObject(person.id);
+        Assert.Null(person3?.root);
     }
 }
