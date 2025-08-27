@@ -83,11 +83,8 @@ internal class Deserializer(RootObject rootObject)
         }
 
         int id = jToken["$id"]?.Value<int>() ?? rootObject.nextId;
-        if (instance != null) // arrays will be handled after creation
-            rootObject.registerSubObject(instance, id);
-
-        // Load attachments
         var attachmentsToken = jToken["$attachments"];
+        var attachements = new Dictionary<string, RootObject>();
         if (attachmentsToken != null && attachmentsToken.Type == JTokenType.Object)
         {
             Dictionary<string, int> dict = new Dictionary<string, int>();
@@ -95,33 +92,44 @@ internal class Deserializer(RootObject rootObject)
             {
                 dict[prop.Key] = prop.Value!.Value<int>();
             }
-            rootObject.setAttachements(instance, dict.ToDictionary(x => x.Key, x => rootObject.registry.GetObject(x.Value)));
+
+            attachements = dict.Where(x => rootObject.registry.GetObject(x.Value) != null)
+                .ToDictionary(x => x.Key, x => rootObject.registry.GetObject(x.Value)!);
+
+            if (attachements.Count == 0) attachements = null;
+        }
+
+        if (instance != null) // arrays will be handled after creation
+        {
+            rootObject.registerSubObject(instance, id);
+            rootObject.setAttachements(instance, attachements);
         }
 
         // Handle arrays
         if (actualType.IsArray)
         {
             var elementType = actualType.GetElementType() ?? typeof(object);
-            var valuesToken = jToken["$values"];
+            var valuesToken = jToken["$values"] as JArray;
+            int count = valuesToken?.Count ?? 0;
+
+            // Create and register the array immediately so $ref to this array works.
+            var array = Array.CreateInstance(elementType, count);
+
+            // Use the provided $id if present; otherwise use nextId as you already do.
+            rootObject.registerSubObject(array, id);
+            rootObject.setAttachements(array, attachements);
+
+            // Now populate the elements
             if (valuesToken != null)
             {
-                var tempList = new List<object?>();
-                foreach (var itemToken in valuesToken)
+                for (int i = 0; i < count; i++)
                 {
-                    tempList.Add(ReadJson(itemToken.CreateReader(), elementType));
+                    var item = ReadJson(valuesToken[i].CreateReader(), elementType);
+                    array.SetValue(item, i);
                 }
-
-                var array = Array.CreateInstance(elementType, tempList.Count);
-                for (int i = 0; i < tempList.Count; i++)
-                {
-                    array.SetValue(tempList[i], i);
-                }
-
-                // Register the actual array now (replacing the placeholder)
-                rootObject.registerSubObject(array, id);
-                return array;
             }
-            return Array.CreateInstance(elementType, 0);
+
+            return array;
         }
 
         // Handle dictionaries

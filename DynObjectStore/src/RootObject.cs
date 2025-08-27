@@ -11,7 +11,7 @@ public class RootObject
     public int id;
     private Dictionary<object, int> SubObjectIds = [];
     private Dictionary<int, object> SubObjects = [];
-    private Dictionary<object, Dictionary<string, RootObject>> Attachements = []; // maybe into registry
+    private Dictionary<object, Dictionary<string, RootObject>> Attachements = [];
     internal int nextId = 0;
 
     public void addSubObject(object obj, int nextId)
@@ -19,12 +19,6 @@ public class RootObject
         SubObjectIds[obj] = nextId;
         SubObjects[nextId] = obj;
     }
-
-    // public void removeSubObject(object obj) // probably not needed
-    // {
-    //     SubObjectIds.Remove(obj);
-    //     SubObjects.Remove(SubObjectIds[obj]);
-    // }
 
     public object? getSubObject(int id)
     {
@@ -58,8 +52,13 @@ public class RootObject
         addAttachement(obj, name, registry.SaveObject(attachement));
     }
 
-    internal void setAttachements(object obj, Dictionary<string, RootObject> value)
+    internal void setAttachements(object obj, Dictionary<string, RootObject>? value)
     {
+        if (value == null)
+        {
+            Attachements.Remove(obj);
+            return;
+        }
         Attachements[obj] = value;
     }
 
@@ -73,9 +72,9 @@ public class RootObject
 
     public Dictionary<string, RootObject>? getAttachements(object obj)
     {
-        if (SubObjectIds.TryGetValue(obj, out var attachments))
+        if (Attachements.TryGetValue(obj, out var attachments))
         {
-            return Attachements[obj];
+            return attachments;
         }
         return null;
     }
