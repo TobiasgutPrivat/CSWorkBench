@@ -4,9 +4,9 @@ using System.Collections;
 using System.Reflection;
 using Newtonsoft.Json;
 
-public class Serializer(Registry registry, RootObject refs)
+internal class Serializer(RootObject rootObject)
 {
-    public string Serialize(object obj)
+    internal string Serialize(object obj)
     {
         using var sw = new StringWriter();
         using var writer = new JsonTextWriter(sw)
@@ -20,9 +20,9 @@ public class Serializer(Registry registry, RootObject refs)
         return sw.ToString();
     }
 
-    public HashSet<int> idsWritten = new();
+    internal HashSet<int> idsWritten = new();
 
-    public void WriteJson(JsonWriter writer, object? value)
+    internal void WriteJson(JsonWriter writer, object? value)
     {
         if (value == null)
         {
@@ -58,7 +58,7 @@ public class Serializer(Registry registry, RootObject refs)
         }
 
         // Handle references for reference types
-        int id = refs.registerSubObject(value);
+        int id = rootObject.registerSubObject(value);
         if (idsWritten.Contains(id))
         {
             // Already serialized: write a ref
@@ -82,7 +82,7 @@ public class Serializer(Registry registry, RootObject refs)
         writer.WriteValue(type.AssemblyQualifiedName);
 
         // Write attachments
-        var attachments = refs.getAttachements(value);
+        var attachments = rootObject.getAttachements(value);
         if (attachments != null && attachments.Count > 0)
         {
             writer.WritePropertyName("$attachments");

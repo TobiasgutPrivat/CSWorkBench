@@ -6,16 +6,16 @@ using Newtonsoft.Json.Linq;
 
 namespace DynObjectStore;
 
-public class Deserializer(Registry registry, RootObject refs)
+internal class Deserializer(RootObject rootObject)
 {
-    public object? Deserialize(string json, Type type)
+    internal object? Deserialize(string json, Type type)
     {
         using var sr = new StringReader(json);
         using var reader = new JsonTextReader(sr);
         return ReadJson(reader, type);
     }
 
-    public object? ReadJson(JsonReader reader, Type objectType)
+    internal object? ReadJson(JsonReader reader, Type objectType)
     {
         if (reader.TokenType == JsonToken.Null)
             return null;
@@ -32,7 +32,7 @@ public class Deserializer(Registry registry, RootObject refs)
         if (jToken["$ref"] != null)
         {
             int refId = jToken["$ref"]!.Value<int>();
-            return refs.getSubObject(refId);
+            return rootObject.getSubObject(refId);
         }
 
         // Resolve type
@@ -82,9 +82,9 @@ public class Deserializer(Registry registry, RootObject refs)
             // Register immediately so $ref works and attachments can bind
         }
 
-        int id = jToken["$id"]?.Value<int>() ?? refs.nextId;
+        int id = jToken["$id"]?.Value<int>() ?? rootObject.nextId;
         if (instance != null) // arrays will be handled after creation
-            refs.registerSubObject(instance, id);
+            rootObject.registerSubObject(instance, id);
 
         // Load attachments
         var attachmentsToken = jToken["$attachments"];
@@ -95,7 +95,7 @@ public class Deserializer(Registry registry, RootObject refs)
             {
                 dict[prop.Key] = prop.Value!.Value<int>();
             }
-            refs.setAttachements(instance, dict.ToDictionary(x => x.Key, x => registry.GetObject(x.Value)));
+            rootObject.setAttachements(instance, dict.ToDictionary(x => x.Key, x => rootObject.registry.GetObject(x.Value)));
         }
 
         // Handle arrays
@@ -118,7 +118,7 @@ public class Deserializer(Registry registry, RootObject refs)
                 }
 
                 // Register the actual array now (replacing the placeholder)
-                refs.registerSubObject(array, id);
+                rootObject.registerSubObject(array, id);
                 return array;
             }
             return Array.CreateInstance(elementType, 0);

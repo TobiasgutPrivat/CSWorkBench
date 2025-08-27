@@ -1,7 +1,5 @@
 namespace DynObjectStore;
 
-using Newtonsoft.Json;
-
 public class Registry(IDBConnection db)
 {
     // like local memory connected to drive (here database-service)
@@ -10,7 +8,7 @@ public class Registry(IDBConnection db)
 
     public void SaveObject(RootObject obj)
     {
-        Serializer serializer = new Serializer(this, obj);
+        Serializer serializer = new Serializer(obj);
         string jsonData = serializer.Serialize(obj);
         db.UpdateObject(obj.id, jsonData);
     }
@@ -18,9 +16,9 @@ public class Registry(IDBConnection db)
     public int SaveObject(object obj)
     {
         RootObject objWrap = new RootObject();
-        objWrap.obj = obj;
+        objWrap.root = obj;
 
-        Serializer serializer = new Serializer(this, objWrap);
+        Serializer serializer = new Serializer(objWrap);
         string jsonData = serializer.Serialize(obj);
 
         Type type = obj.GetType();
@@ -53,13 +51,14 @@ public class Registry(IDBConnection db)
 
         Type type = Type.GetType(className) ?? throw new Exception($"Type {className} not found.");
 
-        RootObject objWrap = new RootObject();
-        objWrap.id = id;
-        Deserializer deserializer = new Deserializer(this, objWrap);
+        RootObject rootObject = new RootObject();
+        rootObject.id = id;
+        rootObject.registry = this;
+        Deserializer deserializer = new Deserializer(rootObject);
 
-        objWrap.obj = deserializer.Deserialize(data, type) ?? throw new Exception($"Deserialization failed.");
-        Objects[id] = objWrap;
-        return objWrap;
+        rootObject.root = deserializer.Deserialize(data, type) ?? throw new Exception($"Deserialization failed.");
+        Objects[id] = rootObject;
+        return rootObject;
     }
 
     public object? ReloadObject(RootObject obj)
