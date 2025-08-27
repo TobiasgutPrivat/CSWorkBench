@@ -52,36 +52,18 @@ internal class Deserializer(RootObject rootObject)
                 JToken? token = jToken[field.Name];
                 if (token != null)
                 {
-                    field.SetValueDirect(__makeref(structInstance),
-                        ReadJson(token.CreateReader(), field.FieldType));
+                    object? fieldValue = ReadJson(token.CreateReader(), field.FieldType);
+                    if (fieldValue != null)
+                    {
+                        field.SetValueDirect(__makeref(structInstance), fieldValue);
+                    }
                 }
             }
 
             return structInstance;
         }
 
-        // Create uninitialized instance
-        object instance;
-        if (actualType.IsArray)
-        {
-            // For arrays we defer actual creation until we know element count
-            instance = null!;
-        }
-        else
-        {
-            ConstructorInfo? ctor = actualType.GetConstructor(Type.EmptyTypes);
-            if (ctor != null)
-            {
-                instance = ctor.Invoke(null);
-            }
-            else
-            {
-                instance = FormatterServices.GetUninitializedObject(actualType);
-            }
-
-            // Register immediately so $ref works and attachments can bind
-        }
-
+        // read metadata
         int id = jToken["$id"]?.Value<int>() ?? rootObject.nextId;
         JToken? attachmentsToken = jToken["$attachments"];
         Dictionary<string, RootObject>? attachements = null;
@@ -97,12 +79,6 @@ internal class Deserializer(RootObject rootObject)
                 .ToDictionary(x => x.Key, x => rootObject.registry.GetObject(x.Value)!);
 
             if (attachements.Count == 0) attachements = null;
-        }
-
-        if (instance != null) // arrays will be handled after creation
-        {
-            rootObject.registerSubObject(instance, id);
-            rootObject.setAttachements(instance, attachements);
         }
 
         // Handle arrays
@@ -132,6 +108,21 @@ internal class Deserializer(RootObject rootObject)
             return array;
         }
 
+        // Create uninitialized instance
+        object instance = null!;
+        ConstructorInfo? ctor = actualType.GetConstructor(Type.EmptyTypes);
+        if (ctor != null)
+        {
+            instance = ctor.Invoke(null);
+        }
+        else
+        {
+            instance = FormatterServices.GetUninitializedObject(actualType);
+        }
+
+        rootObject.registerSubObject(instance, id);
+        rootObject.setAttachements(instance, attachements);
+
         // Handle dictionaries
         if (instance as IDictionary != null)
         {
@@ -157,8 +148,7 @@ internal class Deserializer(RootObject rootObject)
             {
                 Type elementType = actualType.IsGenericType ? actualType.GetGenericArguments()[0] : typeof(object);
 
-                IList list = instance as IList;
-
+                IList list = instance as IList ?? throw new NotImplementedException(); //TODO check this case
                 foreach (JToken itemToken in valuesToken)
                 {
                     list.Add(ReadJson(itemToken.CreateReader(), elementType)!);
