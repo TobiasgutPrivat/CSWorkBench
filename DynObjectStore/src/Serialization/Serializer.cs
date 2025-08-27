@@ -46,9 +46,9 @@ internal class Serializer(RootObject rootObject)
             writer.WritePropertyName("$type");
             writer.WriteValue(type.AssemblyQualifiedName);
 
-            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+
+            foreach (FieldInfo field in ReflectionCache.GetSerializableFields(type))
             {
-                if (field.IsDefined(typeof(NonSerializedAttribute), false)) continue;
                 writer.WritePropertyName(field.Name);
                 WriteJson(writer, field.GetValue(value));
             }
@@ -124,13 +124,7 @@ internal class Serializer(RootObject rootObject)
         else
         {
             // handle fields (only fields because: https://chatgpt.com/share/68ad9143-a9e4-8007-b614-bd744eeeb8c0)
-            Type? currtype = type;
-            List<FieldInfo> fields = new List<FieldInfo>();
-            while (currtype != null)
-            {
-                fields.AddRange(currtype.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly));
-                currtype = currtype.BaseType;
-            }
+            List<FieldInfo> fields = ReflectionCache.GetSerializableFields(type);
 
             foreach (var field in fields)
             {

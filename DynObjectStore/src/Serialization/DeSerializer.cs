@@ -10,8 +10,8 @@ internal class Deserializer(RootObject rootObject)
 {
     internal object? Deserialize(string json, Type type)
     {
-        using var sr = new StringReader(json);
-        using var reader = new JsonTextReader(sr);
+        using StringReader sr = new StringReader(json);
+        using JsonTextReader reader = new JsonTextReader(sr);
         return ReadJson(reader, type);
     }
 
@@ -20,7 +20,7 @@ internal class Deserializer(RootObject rootObject)
         if (reader.TokenType == JsonToken.Null)
             return null;
 
-        var jToken = JToken.Load(reader);
+        JToken jToken = JToken.Load(reader);
 
         // Handle primitives
         if (objectType.IsPrimitive || objectType.IsEnum || objectType == typeof(string) || objectType == typeof(decimal))
@@ -39,7 +39,7 @@ internal class Deserializer(RootObject rootObject)
         Type actualType = objectType;
         if (jToken["$type"] != null)
         {
-            actualType = Type.GetType(jToken["$type"]!.Value<string>()) ?? objectType;
+            actualType = Type.GetType(jToken["$type"]!.Value<string>()!) ?? objectType;
         }
 
         // Value types (structs) → just populate
@@ -47,9 +47,9 @@ internal class Deserializer(RootObject rootObject)
         {
             object structInstance = FormatterServices.GetUninitializedObject(actualType);
 
-            foreach (var field in actualType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            foreach (FieldInfo field in ReflectionCache.GetSerializableFields(actualType))
             {
-                var token = jToken[field.Name];
+                JToken? token = jToken[field.Name];
                 if (token != null)
                 {
                     field.SetValueDirect(__makeref(structInstance),
@@ -69,7 +69,7 @@ internal class Deserializer(RootObject rootObject)
         }
         else
         {
-            var ctor = actualType.GetConstructor(Type.EmptyTypes);
+            ConstructorInfo? ctor = actualType.GetConstructor(Type.EmptyTypes);
             if (ctor != null)
             {
                 instance = ctor.Invoke(null);
@@ -83,8 +83,8 @@ internal class Deserializer(RootObject rootObject)
         }
 
         int id = jToken["$id"]?.Value<int>() ?? rootObject.nextId;
-        var attachmentsToken = jToken["$attachments"];
-        var attachements = new Dictionary<string, RootObject>();
+        JToken? attachmentsToken = jToken["$attachments"];
+        Dictionary<string, RootObject>? attachements = null;
         if (attachmentsToken != null && attachmentsToken.Type == JTokenType.Object)
         {
             Dictionary<string, int> dict = new Dictionary<string, int>();
@@ -108,12 +108,12 @@ internal class Deserializer(RootObject rootObject)
         // Handle arrays
         if (actualType.IsArray)
         {
-            var elementType = actualType.GetElementType() ?? typeof(object);
-            var valuesToken = jToken["$values"] as JArray;
+            Type elementType = actualType.GetElementType() ?? typeof(object);
+            JArray? valuesToken = jToken["$values"] as JArray;
             int count = valuesToken?.Count ?? 0;
 
             // Create and register the array immediately so $ref to this array works.
-            var array = Array.CreateInstance(elementType, count);
+            Array array = Array.CreateInstance(elementType, count);
 
             // Use the provided $id if present; otherwise use nextId as you already do.
             rootObject.registerSubObject(array, id);
@@ -124,7 +124,7 @@ internal class Deserializer(RootObject rootObject)
             {
                 for (int i = 0; i < count; i++)
                 {
-                    var item = ReadJson(valuesToken[i].CreateReader(), elementType);
+                    object? item = ReadJson(valuesToken[i].CreateReader(), elementType);
                     array.SetValue(item, i);
                 }
             }
@@ -133,16 +133,16 @@ internal class Deserializer(RootObject rootObject)
         }
 
         // Handle dictionaries
-        if (typeof(IDictionary).IsAssignableFrom(actualType))
+        if (instance as IDictionary != null)
         {
-            var dict = (IDictionary)instance;
-            var valuesToken = jToken["$values"];
+            IDictionary dict = (IDictionary)instance;
+            JToken? valuesToken = jToken["$values"];
             if (valuesToken != null)
             {
-                foreach (var kvToken in valuesToken)
+                foreach (JToken kvToken in valuesToken)
                 {
-                    var key = ReadJson(kvToken["Key"]!.CreateReader(), typeof(object));
-                    var val = ReadJson(kvToken["Value"]!.CreateReader(), typeof(object));
+                    object? key = ReadJson(kvToken["Key"]!.CreateReader(), typeof(object));
+                    object? val = ReadJson(kvToken["Value"]!.CreateReader(), typeof(object));
                     dict.Add(key!, val);
                 }
             }
@@ -150,16 +150,16 @@ internal class Deserializer(RootObject rootObject)
         }
 
         // Handle lists/collections
-        if (typeof(IEnumerable).IsAssignableFrom(actualType) && actualType != typeof(string))
+        if (instance as IEnumerable != null && actualType != typeof(string))
         {
-            var valuesToken = jToken["$values"];
+            JToken? valuesToken = jToken["$values"];
             if (valuesToken != null)
             {
-                var elementType = actualType.IsGenericType ? actualType.GetGenericArguments()[0] : typeof(object);
+                Type elementType = actualType.IsGenericType ? actualType.GetGenericArguments()[0] : typeof(object);
 
                 IList list = instance as IList;
 
-                foreach (var itemToken in valuesToken)
+                foreach (JToken itemToken in valuesToken)
                 {
                     list.Add(ReadJson(itemToken.CreateReader(), elementType)!);
                 }
@@ -168,22 +168,20 @@ internal class Deserializer(RootObject rootObject)
         }
 
         // Populate fields
-        Type? currtype = actualType;
-        List<FieldInfo> fields = new List<FieldInfo>();
-        while (currtype != null)
+        List<FieldInfo> fields = ReflectionCache.GetSerializableFields(actualType);
+
+        MemberInfo[] memberInfos = fields.Cast<MemberInfo>().ToArray();
+        object?[] memberValues = new object?[memberInfos.Length];
+
+        for (int i = 0; i < memberInfos.Length; i++)
         {
-            fields.AddRange(currtype.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly));
-            currtype = currtype.BaseType;
+            FieldInfo f = (FieldInfo)memberInfos[i];
+            JToken? token = jToken[f.Name];
+            memberValues[i] = token != null ? ReadJson(token.CreateReader(), f.FieldType) : null;
         }
 
-        foreach (var field in fields)
-        {
-            var token = jToken[field.Name];
-            if (token != null)
-            {
-                field.SetValue(instance, ReadJson(token.CreateReader(), field.FieldType));
-            }
-        }
+        // This sets even private/readonly fields in a supported way
+        FormatterServices.PopulateObjectMembers(instance, memberInfos, memberValues);
 
         return instance;
     }
