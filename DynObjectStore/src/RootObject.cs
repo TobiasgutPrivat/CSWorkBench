@@ -53,6 +53,10 @@ public class RootObject
         }
         attachments[name] = attachement;
     }
+    public void addAttachement(object obj, string name, object attachement)
+    {
+        addAttachement(obj, name, registry.SaveObject(attachement));
+    }
 
     internal void setAttachements(object obj, Dictionary<string, RootObject> value)
     {

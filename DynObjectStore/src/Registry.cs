@@ -6,27 +6,28 @@ public class Registry(IDBConnection db)
 
     internal Dictionary<int, RootObject> Objects = [];
 
-    public void SaveObject(RootObject obj)
+    public void SaveObject(RootObject rootObject)
     {
-        Serializer serializer = new Serializer(obj);
-        string jsonData = serializer.Serialize(obj);
-        db.UpdateObject(obj.id, jsonData);
+        Serializer serializer = new Serializer(rootObject);
+        string jsonData = serializer.Serialize(rootObject.root);
+        db.UpdateObject(rootObject.id, jsonData);
     }
 
-    public int SaveObject(object obj)
+    public RootObject SaveObject(object obj)
     {
-        RootObject objWrap = new RootObject();
-        objWrap.root = obj;
+        RootObject rootObject = new RootObject();
+        rootObject.root = obj;
 
-        Serializer serializer = new Serializer(objWrap);
+        Serializer serializer = new Serializer(rootObject);
         string jsonData = serializer.Serialize(obj);
 
         Type type = obj.GetType();
         int newId = db.CreateObject(type.AssemblyQualifiedName!, jsonData);
 
-        Objects[newId] = objWrap;
-        objWrap.id = newId;
-        return newId;
+        Objects[newId] = rootObject;
+        rootObject.id = newId;
+        rootObject.registry = this;
+        return rootObject;
     }
 
     public void DeleteObject(RootObject obj)
