@@ -4,7 +4,7 @@ public class Registry(IDBConnection db)
 {
     // like local memory connected to drive (here database-service)
 
-    internal Dictionary<int, RootObject> Objects = [];
+    internal readonly Dictionary<int, RootObject> objects = [];
 
     public void SaveObject(RootObject rootObject)
     {
@@ -24,7 +24,7 @@ public class Registry(IDBConnection db)
         Type type = obj.GetType();
         int newId = db.CreateObject(type.AssemblyQualifiedName!, jsonData);
 
-        Objects[newId] = rootObject;
+        objects[newId] = rootObject;
         rootObject.id = newId;
         rootObject.registry = this;
         return rootObject;
@@ -33,18 +33,18 @@ public class Registry(IDBConnection db)
     public void DeleteObject(RootObject obj)
     {
         db.DeleteObject(obj.id);
-        Objects.Remove(obj.id);
+        objects.Remove(obj.id);
     }
 
     public void DeleteObject(int id)
     {
         db.DeleteObject(id);
-        Objects.Remove(id);
+        objects.Remove(id);
     }
 
     public RootObject? GetObject(int id)
     {
-        if (Objects.TryGetValue(id, out RootObject? value)) return value;
+        if (objects.TryGetValue(id, out RootObject? value)) return value;
 
         db.GetObject(id, out string? className, out string? data);
 
@@ -58,19 +58,19 @@ public class Registry(IDBConnection db)
         Deserializer deserializer = new Deserializer(rootObject);
 
         rootObject.root = deserializer.Deserialize(data, type) ?? throw new Exception($"Deserialization failed.");
-        Objects[id] = rootObject;
+        objects[id] = rootObject;
         return rootObject;
     }
 
     public object? ReloadObject(RootObject obj)
     {
-        Objects.Remove(obj.id);
+        objects.Remove(obj.id);
         return GetObject(obj.id);
     }
 
     public object? ReloadObject(int id)
     {
-        Objects.Remove(id);
+        objects.Remove(id);
         return GetObject(id);
     }
 }

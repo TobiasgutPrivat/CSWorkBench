@@ -8,8 +8,8 @@ internal class Serializer(RootObject rootObject)
 {
     internal string Serialize(object obj)
     {
-        using var sw = new StringWriter();
-        using var writer = new JsonTextWriter(sw)
+        using StringWriter sw = new StringWriter();
+        using JsonTextWriter writer = new JsonTextWriter(sw)
         {
             Formatting = Formatting.Indented
         };
@@ -30,7 +30,7 @@ internal class Serializer(RootObject rootObject)
             return;
         }
 
-        var type = value.GetType();
+        Type type = value.GetType();
 
         // Value types and primitives are serialized normally
         if (type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(decimal))
@@ -58,7 +58,7 @@ internal class Serializer(RootObject rootObject)
         }
 
         // Handle references for reference types
-        int id = rootObject.registerSubObject(value);
+        int id = rootObject.RegisterSubObject(value);
         if (idsWritten.Contains(id))
         {
             // Already serialized: write a ref
@@ -82,12 +82,12 @@ internal class Serializer(RootObject rootObject)
         writer.WriteValue(type.AssemblyQualifiedName);
 
         // Write attachments
-        var attachments = rootObject.getAttachements(value);
+        Dictionary<string, RootObject>? attachments = rootObject.GetAttachements(value);
         if (attachments != null && attachments.Count > 0)
         {
             writer.WritePropertyName("$attachments");
             writer.WriteStartObject();
-            foreach (var attachement in attachments)
+            foreach (KeyValuePair<string, RootObject> attachement in attachments)
             {
                 writer.WritePropertyName(attachement.Key);
                 WriteJson(writer, attachement.Value.id);
@@ -126,9 +126,9 @@ internal class Serializer(RootObject rootObject)
             // handle fields (only fields because: https://chatgpt.com/share/68ad9143-a9e4-8007-b614-bd744eeeb8c0)
             List<FieldInfo> fields = ReflectionCache.GetSerializableFields(type);
 
-            foreach (var field in fields)
+            foreach (FieldInfo field in fields)
             {
-                var val = field.GetValue(value);
+                object? val = field.GetValue(value);
                 writer.WritePropertyName(field.Name);
                 WriteJson(writer, val);
             }

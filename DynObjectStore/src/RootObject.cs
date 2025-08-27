@@ -9,70 +9,70 @@ public class RootObject
     public Registry registry = null!; // home registry
     public object root = null!;
     public int id;
-    private Dictionary<object, int> SubObjectIds = [];
-    private Dictionary<int, object> SubObjects = [];
-    private Dictionary<object, Dictionary<string, RootObject>> Attachements = [];
+    private readonly Dictionary<object, int> subObjectIds = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<int, object> subObjects = [];
+    private readonly Dictionary<object, Dictionary<string, RootObject>> attachements = new(ReferenceEqualityComparer.Instance);
     internal int nextId = 0;
 
-    public void addSubObject(object obj, int nextId)
+    public void AddSubObject(object obj, int nextId)
     {
-        SubObjectIds[obj] = nextId;
-        SubObjects[nextId] = obj;
+        subObjectIds[obj] = nextId;
+        subObjects[nextId] = obj;
     }
 
-    public object? getSubObject(int id)
+    public object? GetSubObject(int id)
     {
-        if (SubObjects.TryGetValue(id, out var obj))
+        if (subObjects.TryGetValue(id, out var obj))
         {
             return obj;
         }
         return null;
     }
 
-    public int? getSubObjectId(object obj)
+    public int? GetSubObjectId(object obj)
     {
-        if (SubObjectIds.TryGetValue(obj, out var id))
+        if (subObjectIds.TryGetValue(obj, out var id))
         {
             return id;
         }
         return null;
     }
 
-    public void addAttachement(object obj, string name, RootObject attachement)
+    public void AddAttachement(object obj, string name, RootObject attachement)
     {
-        if (!Attachements.TryGetValue(obj, out var attachments))
+        if (!attachements.TryGetValue(obj, out var attachments))
         {
             attachments = new Dictionary<string, RootObject>();
-            Attachements[obj] = attachments;
+            attachements[obj] = attachments;
         }
         attachments[name] = attachement;
     }
-    public void addAttachement(object obj, string name, object attachement)
+    public void AddAttachement(object obj, string name, object attachement)
     {
-        addAttachement(obj, name, registry.SaveObject(attachement));
+        AddAttachement(obj, name, registry.SaveObject(attachement));
     }
 
-    internal void setAttachements(object obj, Dictionary<string, RootObject>? value)
+    internal void SetAttachements(object obj, Dictionary<string, RootObject>? value)
     {
         if (value == null)
         {
-            Attachements.Remove(obj);
+            attachements.Remove(obj);
             return;
         }
-        Attachements[obj] = value;
+        attachements[obj] = value;
     }
 
-    public void removeAttachement(object obj, string name)
+    public void RemoveAttachement(object obj, string name)
     {
-        if (Attachements.TryGetValue(obj, out var attachments))
+        if (attachements.TryGetValue(obj, out var attachments))
         {
             attachments.Remove(name);
         }
     }
 
-    public Dictionary<string, RootObject>? getAttachements(object obj)
+    public Dictionary<string, RootObject>? GetAttachements(object obj)
     {
-        if (Attachements.TryGetValue(obj, out var attachments))
+        if (attachements.TryGetValue(obj, out var attachments))
         {
             return attachments;
         }
@@ -80,21 +80,21 @@ public class RootObject
     }
 
     // internal for serialization
-    internal int registerSubObject(object obj, int id)
+    internal int RegisterSubObject(object obj, int id)
     {
-        if (getSubObject(id) != null)
+        if (GetSubObject(id) != null)
         {
             throw new Exception($"Object with ID {id} already exists.");
         }
         nextId = Math.Max(nextId, id + 1);
-        SubObjectIds[obj] = id;
-        SubObjects[id] = obj;
+        subObjectIds[obj] = id;
+        subObjects[id] = obj;
         return id;
     }
 
-    internal int registerSubObject(object obj)
+    internal int RegisterSubObject(object obj)
     {
-        if (SubObjectIds.TryGetValue(obj, out var id))
+        if (subObjectIds.TryGetValue(obj, out var id))
         {
             return id;
         }
@@ -102,9 +102,9 @@ public class RootObject
         {
             id = nextId;
             nextId++;
-            SubObjectIds[obj] = id;
-            SubObjects[id] = obj;
-            Attachements[obj] = new Dictionary<string, RootObject>();
+            subObjectIds[obj] = id;
+            subObjects[id] = obj;
+            attachements[obj] = new Dictionary<string, RootObject>();
             return id;
         }
     }

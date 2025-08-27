@@ -32,7 +32,7 @@ internal class Deserializer(RootObject rootObject)
         if (jToken["$ref"] != null)
         {
             int refId = jToken["$ref"]!.Value<int>();
-            return rootObject.getSubObject(refId);
+            return rootObject.GetSubObject(refId);
         }
 
         // Resolve type
@@ -92,8 +92,8 @@ internal class Deserializer(RootObject rootObject)
             Array array = Array.CreateInstance(elementType, count);
 
             // Use the provided $id if present; otherwise use nextId as you already do.
-            rootObject.registerSubObject(array, id);
-            rootObject.setAttachements(array, attachements);
+            rootObject.RegisterSubObject(array, id);
+            rootObject.SetAttachements(array, attachements);
 
             // Now populate the elements
             if (valuesToken != null)
@@ -120,8 +120,8 @@ internal class Deserializer(RootObject rootObject)
             instance = FormatterServices.GetUninitializedObject(actualType);
         }
 
-        rootObject.registerSubObject(instance, id);
-        rootObject.setAttachements(instance, attachements);
+        rootObject.RegisterSubObject(instance, id);
+        rootObject.SetAttachements(instance, attachements);
 
         // Handle dictionaries
         if (instance as IDictionary != null)
