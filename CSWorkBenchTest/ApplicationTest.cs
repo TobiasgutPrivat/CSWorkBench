@@ -5,22 +5,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using DynObjectStore;
-using Npgsql;
 
 public class ApplicationTest
 {
     public static async Task<Registry> connectToDB()
     {
-        var connBuilder = new NpgsqlConnectionStringBuilder
-        {
-            Host = "localhost",
-            Port = 5432,
-            Username = "postgres",
-            Password = "postgres",
-            Database = "CSWorkBenchDB",
-            SslMode = SslMode.Disable
-        };
-        IDBConnection connection = new PgDBConnection(connBuilder.ConnectionString);
+        IDBConnection connection = new SQLiteDBConnection(@"..\..\..\..\data\test.db");
         await connection.Open();
         return new Registry(connection);
     }

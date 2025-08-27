@@ -1,23 +1,16 @@
-# Setup
+# TODO
 
-**Requires**
-
-- some DB server with according implementation of IDBConnection and according schema
-- initialization of DBConnection and Registry
-
-## Tested:
-
-PgSqlServer with schema from init/schema.sql ([download](https://www.postgresql.org/download/))
-
-PgAdmin4 and Command Line Tools are usefull for administration and testing
-
-## Untested
-
-docker-compose maybe works
+maybe remove type info from Db-Table instead use the one from json string
 
 # Concept
 
 based on Idea of a (Global entity-centric IT Environement)[https://www.notion.so/Global-Entity-Centric-IT-1bd37f05f33a8024bd0aea28f3f3baba]
+
+Registry:
+
+This acts like a runtime memory of Objects in a Database.
+There should always only be one Registry running per Database, and all interactions with Data should go through that registry.
+Services like UI, API, Agent can use that single Registry to access Data
 
 Objects:
 
@@ -52,3 +45,20 @@ RealTime-Memory:
   (possible solution) maybe id's can be tracked of objects within an object (like ref in serialization), bind to instance during runtime and deserialize (can maybe be integrated in serialization adding reference to diffrent rootobject -> not needing attachements seperate anymore)
 
 - recursion does not work if classes don't have parameterless constructors
+
+# Setup
+
+**Requires**
+
+- some DB server with according implementation of IDBConnection and according schema
+- initialization of DBConnection and Registry
+
+## Tested:
+
+PgSqlServer with schema from init/schema.sql ([download](https://www.postgresql.org/download/))
+
+PgAdmin4 and Command Line Tools are usefull for administration and testing
+
+## Untested
+
+docker-compose maybe works

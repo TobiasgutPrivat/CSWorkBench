@@ -1,4 +1,4 @@
-﻿@page "/{id:int}/{*path}"
+﻿@page "/{id:int}/{subId:int?}"
 @using DynObjectStore
 @using System.Reflection
 @using System.Text.Json
@@ -6,42 +6,23 @@
 @inject Registry registry
 
 <strong>ID:</strong> @id <br />
-<strong>Path:</strong> @path <br />
+<strong>SubId:</strong> @subId <br />
 
-<p>@JsonSerializer.Serialize(obj)</p>
+<p>@obj?.ToString()</p>
 
 @code {
     [Parameter]
-    public int? id { get; set; }
+    public int id { get; set; }
 
     [Parameter]
-    public string? path { get; set; }
+    public int? subId { get; set; }
 
+    public RootObject? root = null;
     public object? obj = null;
 
     protected override async Task OnInitializedAsync()
     {
-        if (id.HasValue)
-        {
-            obj = await Task.Run(() => registry.GetObject(id.Value));
-        }
-
-        if (obj is null) return;
-
-        if (path is null) return;
-
-        foreach (string part in path.Split('/').Where(p => !string.IsNullOrWhiteSpace(p)))
-        {
-            var property = obj!.GetType().GetProperty(part, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-
-            if (property is not null)
-            {
-                obj = property.GetValue(obj);
-            }
-            else if (obj is IEnumerable<object> enumerable && int.TryParse(part, out int index))
-            {
-                obj = enumerable.ElementAtOrDefault(index);
-            }
-        }
+        root = await registry.GetObject(id);
+        obj = root?.GetSubObject(subId ?? 0);
     }
 }

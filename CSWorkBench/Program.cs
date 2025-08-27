@@ -25,6 +25,7 @@ var connBuilder = new NpgsqlConnectionStringBuilder
 };
 
 IDBConnection conn = new PgDBConnection(connBuilder.ConnectionString);
+conn.Open();
 var registry = new Registry(conn);
 builder.Services.AddSingleton(registry);
 
