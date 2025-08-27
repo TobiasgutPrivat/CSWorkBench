@@ -32,7 +32,7 @@ internal class Deserializer(RootObject rootObject)
         if (jToken["$ref"] != null)
         {
             int refId = jToken["$ref"]!.Value<int>();
-            return rootObject.GetSubObject(refId);
+            return rootObject.GetSubObject(refId) ?? throw new Exception($"Object with ID {refId} not found.");
         }
 
         // Resolve type

@@ -4,7 +4,7 @@ public class Registry(IDBConnection db)
 {
     // like local memory connected to drive (here database-service)
 
-    internal readonly Dictionary<int, RootObject> objects = [];
+    internal readonly Dictionary<int, WeakReference<RootObject>> objects = [];
 
     public void SaveObject(RootObject rootObject)
     {
@@ -24,7 +24,7 @@ public class Registry(IDBConnection db)
         Type type = obj.GetType();
         int newId = db.CreateObject(type.AssemblyQualifiedName!, jsonData);
 
-        objects[newId] = rootObject;
+        objects[newId] = new WeakReference<RootObject>(rootObject);
         rootObject.id = newId;
         rootObject.registry = this;
         return rootObject;
@@ -44,21 +44,26 @@ public class Registry(IDBConnection db)
 
     public RootObject? GetObject(int id)
     {
-        if (objects.TryGetValue(id, out RootObject? value)) return value;
+        if (objects.TryGetValue(id, out var weakRef))
+        {
+            if (weakRef.TryGetTarget(out RootObject? existing))
+                return existing;
+
+            // collected → remove entry
+            objects.Remove(id);
+        }
 
         db.GetObject(id, out string? className, out string? data);
-
         if (className == null || data == null) return null;
 
         Type type = Type.GetType(className) ?? throw new Exception($"Type {className} not found.");
 
-        RootObject rootObject = new RootObject();
-        rootObject.id = id;
-        rootObject.registry = this;
+        RootObject rootObject = new RootObject { id = id, registry = this };
         Deserializer deserializer = new Deserializer(rootObject);
+        rootObject.root = deserializer.Deserialize(data, type)
+                        ?? throw new Exception("Deserialization failed.");
 
-        rootObject.root = deserializer.Deserialize(data, type) ?? throw new Exception($"Deserialization failed.");
-        objects[id] = rootObject;
+        objects[id] = new WeakReference<RootObject>(rootObject);
         return rootObject;
     }
 
