@@ -10,6 +10,19 @@
 
 <p>@obj?.ToString()</p>
 
+@foreach (FieldInfo field in fields)
+{
+    <p>@field.Name @field.GetValue(obj)?.ToString()</p>
+}
+@foreach (PropertyInfo property in properties)
+{
+    <p>@property.Name @property.GetValue(obj)?.ToString()</p>
+}
+@foreach (MethodInfo method in methods)
+{
+    <p>@method.Name</p>
+}
+
 @code {
     [Parameter]
     public int id { get; set; }
@@ -19,10 +32,23 @@
 
     public RootObject? root = null;
     public object? obj = null;
+    public List<FieldInfo> fields = [];
+    public List<PropertyInfo> properties = [];
+    public List<MethodInfo> methods = [];
+
 
     protected override async Task OnInitializedAsync()
     {
+        // get object
         root = await registry.GetObject(id);
         obj = root?.GetSubObject(subId ?? 0);
+        if (obj == null) return;
+
+        // get info
+        Type type = obj.GetType();
+        fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance).ToList();
+        properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
+        methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => !m.IsSpecialName && m.DeclaringType !=
+        typeof(object)).ToList();
     }
 }

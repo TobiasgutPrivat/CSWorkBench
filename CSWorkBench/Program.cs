@@ -1,10 +1,12 @@
 using BlazorStrap;
-using CSWorkBench.Components;
+using CSWorkBench.Components.Layout;
 using DynObjectStore;
 
 AssemblyResolver.AddAssemblyResolvers();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "Properties"));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
