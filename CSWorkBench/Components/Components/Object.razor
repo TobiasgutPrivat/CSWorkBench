@@ -1,11 +1,3 @@
-﻿@page "/{id:int}/{subId:int?}"
-@inject Registry registry
-
-<strong>ID:</strong> @id <br />
-<strong>SubId:</strong> @subId <br />
-
-<p>@obj?.ToString()</p>
-
 @foreach (FieldInfo field in fields)
 {
     <p>@field.Name @field.GetValue(obj)?.ToString()</p>
@@ -21,26 +13,18 @@
 
 @code {
     [Parameter]
-    public int id { get; set; }
+    public required object obj { get; set; }
 
     [Parameter]
-    public int? subId { get; set; }
+    public required Action markModified { get; set; }
 
-    public RootObject? root = null;
-    public object? obj = null;
     public List<FieldInfo> fields = [];
     public List<PropertyInfo> properties = [];
     public List<MethodInfo> methods = [];
 
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        // get object
-        root = await registry.GetObject(id);
-        obj = root?.GetSubObject(subId ?? 0);
-        if (obj == null) return;
-
-        // get info
+        // get reflection info
         Type type = obj.GetType();
         fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance).ToList();
         properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();

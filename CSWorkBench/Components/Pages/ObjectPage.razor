@@ -1,0 +1,38 @@
+﻿@page "/{id:int}/{subId:int?}"
+@inject Registry registry
+
+<strong>ID:</strong> @id <br />
+<strong>SubId:</strong> @subId <br />
+
+<p>@obj?.ToString()</p>
+
+@if (obj != null)
+{
+    <Object obj="obj" markModified="markModified"></Object>
+}
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    [Parameter]
+    public int? subId { get; set; }
+
+
+    private RootObject? root = null;
+    private bool modified = false;
+    private object? obj = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // get object
+        root = await registry.GetObject(id);
+        obj = root?.GetSubObject(subId ?? 0);
+        if (obj == null) return;
+    }
+
+    private void markModified()
+    {
+        modified = true;
+    }
+}
