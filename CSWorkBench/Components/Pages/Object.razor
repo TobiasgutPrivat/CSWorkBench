@@ -6,9 +6,11 @@
 
 <p>@obj?.ToString()</p>
 
+<p>@modified</p>
+
 @if (obj != null)
 {
-    <Object obj="obj" markModified="markModified"></Object>
+    <FullObject obj="obj" markModified="markModified"></FullObject>
 }
 
 @code {

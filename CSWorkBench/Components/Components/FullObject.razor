@@ -1,6 +1,6 @@
 @foreach (FieldInfo field in fields)
 {
-    <p>@field.Name @field.GetValue(obj)?.ToString()</p>
+    <InlineField></InlineField>
 }
 @foreach (PropertyInfo property in properties)
 {
@@ -8,7 +8,7 @@
 }
 @foreach (MethodInfo method in methods)
 {
-    <p>@method.Name</p>
+    <InlineFunction markModified="markModified" method="method" obj="obj"></InlineFunction>
 }
 
 @code {
