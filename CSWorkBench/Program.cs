@@ -6,6 +6,8 @@ AssemblyResolver.AddAssemblyResolvers();
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "Properties"));
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
