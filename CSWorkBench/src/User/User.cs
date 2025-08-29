@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-class User
+public class User
 {
     [JsonIgnore]
     public IDragDropChannel dragDropChannel  { get; set; } // create a dragDropChannel

@@ -1,3 +1,5 @@
 ﻿@page "/"
+@inherits SessionAwareComponent
 
+<strong>User:</strong> @(sessionSettings.user?.GetHashCode() ?? 0) <br />
 <p>Search</p>

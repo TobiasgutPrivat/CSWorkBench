@@ -1,23 +1,31 @@
 
 using Microsoft.JSInterop;
 
-class SessionSettings
+public class SessionSettings
 {
-    User user { get; set; }
+    public User? user { get; set; }
     private readonly IJSRuntime js;
+    private readonly UserService userService;
+    public event Action? OnChange;
 
     public SessionSettings(UserService userService, IJSRuntime js)
     {
+        this.userService = userService;
         this.js = js;
-        string? userId = GetUserIdAsync().GetAwaiter().GetResult();
-        if (userId == null) {
-            userId = new Guid().ToString();
-            SetUserIdAsync(userId);
-        };
-        user = userService.GetCurrentUser(userId);
     }
 
-
+    public async Task InitializeAsync()
+    {
+        string? userId = await GetUserIdAsync();
+        if (userId == null)
+        {
+            userId = new Guid().ToString();
+            await SetUserIdAsync(userId);
+        }
+        user = userService.GetCurrentUser(userId);
+        NotifyStateChanged();
+        Console.WriteLine(userId + " " + user);
+    }
 
     private async Task<string?> GetUserIdAsync()
     {
@@ -28,4 +36,6 @@ class SessionSettings
     {
         await js.InvokeVoidAsync("localStorageHelper.setUserId", id);
     }
+
+    private void NotifyStateChanged() => OnChange?.Invoke();
 }
