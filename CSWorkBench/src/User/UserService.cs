@@ -2,11 +2,12 @@
 // TODO store somewhere
 class UserService
 {
-    private Dictionary<int, User> users = []; //UserId, UserSettings
+    private Dictionary<string, User> users = []; //UserId, UserSettings
 
-    public User GetCurrentUser()
+    public User GetCurrentUser(string UserId)
     {
-        //TODO get or create user based on localstorage entry (one browserApp = one User)
-        throw new NotImplementedException();
+        if (!users.ContainsKey(UserId))
+            users[UserId] = new User();
+        return users[UserId];
     }
 } 
