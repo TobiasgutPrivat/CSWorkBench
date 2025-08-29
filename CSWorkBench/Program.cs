@@ -17,6 +17,7 @@ builder.Services.AddBlazorStrap();
 // connection setup
 IDBConnection conn = new SQLiteDBConnection(@"..\data\test.db"); //TODO this is temp
 var registry = new Registry(conn);
+conn.Open()
 builder.Services.AddSingleton(registry);
 
 var app = builder.Build();
@@ -36,8 +37,6 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
-app.Lifetime.ApplicationStarted.Register(() => conn.Open());
 
 app.Lifetime.ApplicationStopping.Register(() => conn.Dispose());
 

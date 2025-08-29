@@ -39,3 +39,34 @@ run Functions (blocking)
 deleting objects
 
 on starting action (except create) check if nothing changed in registry
+
+### Drag and Drop / multi object usage
+
+**Goal** 
+
+allow the user to have multiple objects opened, and move Data between them.
+
+**Approaches**
+
+1. allow multiple Windows within one Browser
+   - difficult to manage url's
+   - easy to handle drag and drop within one tab (ScopedServies)
+2. allow multiple Tabs with one Object each
+   - difficult to manage Drag and Drop
+   - difficult for user to manage browser tabs
+   - easy to manage object visualization
+
+**Note**
+when implementing cross browser dragging, this can be used within tabs as well
+
+**RoadMap**
+
+1. User identification per browser localstorage
+2. implement cross Tab dragging
+3. maybe implement workspace within a tab
+
+### Agenting
+
+I think agent should be seperate from UI (maybe custom Design)
+
+Just handled as a normal object, where you can drag context to (Context maybe as Attachements -> would create dependency on DynStore)
