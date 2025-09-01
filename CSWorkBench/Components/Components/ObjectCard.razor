@@ -1,0 +1,37 @@
+<BSCard CardType="CardType.Card" >
+    <BSCard CardType="CardType.Header">
+        @* <strong>@GetDisplayIdentity(Model)</strong> *@
+    </BSCard>
+    <BSCard CardType="CardType.Body">
+        @foreach (Field field in fields)
+        {
+            <InlineField field="field" markModified="markModified"></InlineField>
+        }
+    </BSCard>
+    <BSCard CardType="CardType.Footer">
+        @foreach (MethodInfo method in methods)
+        {
+            <InlineFunction markModified="markModified" method="method" obj="obj"></InlineFunction>
+        }
+    </BSCard>
+</BSCard>
+
+@code {
+    [Parameter]
+    public required object obj { get; set; }
+
+    [Parameter]
+    public required Action markModified { get; set; }
+
+    public List<Field> fields = [];
+    public List<MethodInfo> methods = [];
+
+    protected override void OnInitialized()
+    {
+        // get reflection info
+        Type type = obj.GetType();
+        fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance).Select(f => new Field(f.Name,f.FieldType, () => f.GetValue(obj), v => f.SetValue(obj,v))).ToList();
+        fields.AddRange(type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => new Field(p.Name, p.PropertyType, () => p.GetValue(obj), v => p.SetValue(obj,v))).ToList());
+        methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => !m.IsSpecialName && m.DeclaringType != typeof(object)).ToList();
+    }
+}

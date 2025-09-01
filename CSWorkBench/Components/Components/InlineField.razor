@@ -1,4 +1,4 @@
-@switch (field.FieldType)
+@switch (field.Type)
 {
     case Type t when t == typeof(string) || t == typeof(char):
         <BSInput InputType="InputType.Text" @bind-Value="Value"></BSInput>
@@ -20,21 +20,18 @@
 
 @code {
     [Parameter]
-    public required object obj { get; set; }
-
-    [Parameter]
-    public required FieldInfo field { get; set; }
+    public required Field field { get; set; }
 
     [Parameter]
     public required Action markModified { get; set; }
 
     private object? Value
     {
-        get => field.GetValue(obj);
+        get => field.get();
         set
         {
             markModified();
-            field.SetValue(obj, value);
+            field.set(value);
         }
     }
 }
