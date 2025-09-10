@@ -1,20 +1,11 @@
-<BSCard CardType="CardType.Card" >
-    <BSCard CardType="CardType.Header">
-        @* <strong>@GetDisplayIdentity(Model)</strong> *@
-    </BSCard>
-    <BSCard CardType="CardType.Body">
-        @foreach (Field field in fields)
-        {
-            <InlineField field="field" markModified="markModified"></InlineField>
-        }
-    </BSCard>
-    <BSCard CardType="CardType.Footer">
-        @foreach (MethodInfo method in methods)
-        {
-            <InlineFunction markModified="markModified" method="method" obj="obj"></InlineFunction>
-        }
-    </BSCard>
-</BSCard>
+@foreach (Field field in fields)
+{
+    <InlineField field="field" markModified="markModified"></InlineField>
+}
+@foreach (MethodInfo method in methods)
+{
+    <InlineFunction markModified="markModified" method="method" obj="obj"></InlineFunction>
+}
 
 @code {
     [Parameter]

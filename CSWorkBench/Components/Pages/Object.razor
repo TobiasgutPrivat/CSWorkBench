@@ -1,16 +1,11 @@
 ﻿@page "/{id:int}/{subId:int?}"
 @inject Registry registry
 
-<strong>ID:</strong> @id <br />
-<strong>SubId:</strong> @subId <br />
-
-<p>@obj?.ToString()</p>
-
 <p>@modified</p>
 
 @if (obj != null)
 {
-    <ObjectCard obj="obj" markModified="markModified"></ObjectCard>
+    <ObjectDetail obj="obj" markModified="markModified"></ObjectDetail>
 }
 
 @code {
