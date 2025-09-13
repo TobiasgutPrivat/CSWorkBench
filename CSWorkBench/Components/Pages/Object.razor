@@ -1,14 +1,12 @@
 ﻿@page "/{id:int}/{subId:int?}"
-@using DynObjectStore
-@using System.Reflection
-@using System.Text.Json
-@using System.Xml.Serialization
 @inject Registry registry
 
-<strong>ID:</strong> @id <br />
-<strong>SubId:</strong> @subId <br />
+<p>@modified</p>
 
-<p>@obj?.ToString()</p>
+@if (obj != null)
+{
+    <ObjectDetail obj="obj" markModified="markModified"></ObjectDetail>
+}
 
 @code {
     [Parameter]
@@ -17,12 +15,21 @@
     [Parameter]
     public int? subId { get; set; }
 
-    public RootObject? root = null;
-    public object? obj = null;
+
+    private RootObject? root = null;
+    private bool modified = false;
+    private object? obj = null;
 
     protected override async Task OnInitializedAsync()
     {
+        // get object
         root = await registry.GetObject(id);
         obj = root?.GetSubObject(subId ?? 0);
+        if (obj == null) return;
+    }
+
+    private void markModified()
+    {
+        modified = true;
     }
 }

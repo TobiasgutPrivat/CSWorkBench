@@ -1,0 +1,12 @@
+<p>@method.Name</p>
+
+@code {
+    [Parameter]
+    public required object obj { get; set; }
+
+    [Parameter]
+    public required MethodInfo method { get; set; }
+
+    [Parameter]
+    public required Action markModified { get; set; }
+}

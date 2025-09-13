@@ -1,10 +1,13 @@
 using BlazorStrap;
-using CSWorkBench.Components;
+using CSWorkBench.Components.Layout;
 using DynObjectStore;
+using Microsoft.JSInterop;
 
 AssemblyResolver.AddAssemblyResolvers();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "Properties"));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -15,8 +18,15 @@ builder.Services.AddBlazorStrap();
 // connection setup
 IDBConnection conn = new SQLiteDBConnection(@"..\data\test.db"); //TODO this is temp
 var registry = new Registry(conn);
+conn.Open();
 builder.Services.AddSingleton(registry);
 
+// user setup
+UserService userService = new UserService();
+builder.Services.AddSingleton(userService);
+builder.Services.AddScoped(sp => new SessionSettings(userService, sp.GetRequiredService<IJSRuntime>()));
+
+// build
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -35,8 +45,11 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.Lifetime.ApplicationStarted.Register(() => conn.Open());
-
-app.Lifetime.ApplicationStopping.Register(() => conn.Dispose());
+// cleanup
+app.Lifetime.ApplicationStopping.Register(() =>
+{
+    conn.Dispose();
+    userService.Save();
+    });
 
 app.Run();

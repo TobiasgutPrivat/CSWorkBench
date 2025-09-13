@@ -1,0 +1,40 @@
+<div class="mb-3">
+    <BSLabel>@field.Name</BSLabel>
+    @switch (field.Type)
+    {
+        case Type t when t == typeof(string) || t == typeof(char):
+            <BSInput InputType="InputType.Text" @bind-Value="Value"></BSInput>
+            break;
+        case Type t when t == typeof(int) || t == typeof(short) || t == typeof(long) || t == typeof(ushort) || t == typeof(uint)
+    || t == typeof(ulong):
+            <BSInput InputType="InputType.Number" @bind-Value="Value"></BSInput>
+            break;
+        case Type t when t == typeof(float) || t == typeof(double) || t == typeof(decimal):
+            <BSInput InputType="InputType.Number" @bind-Value="Value" Step="any"></BSInput>
+            break;
+        case Type t when t == typeof(bool):
+            <BSInputCheckbox @bind-Value="Value"></BSInputCheckbox>
+            break;
+        default:
+            <p>unknown</p>
+            break;
+    }
+</div>
+@code {
+    [Parameter]
+    public required Field field { get; set; }
+
+    [Parameter]
+    public required Action markModified { get; set; }
+
+    private object? Value
+    {
+        get => field.get();
+        set
+        {
+            markModified();
+            field.set(value);
+        }
+    }
+}
+

@@ -1,5 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@inject SessionSettings sessionSettings
 
+<script src="js/localStorageHelper.js"></script>
 <div class="page">
     <main>
         <article class="content px-4">
@@ -14,3 +16,14 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await sessionSettings.InitializeAsync();
+            StateHasChanged(); // update UI after user is loaded
+        }
+    }
+}

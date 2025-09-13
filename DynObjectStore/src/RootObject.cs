@@ -14,6 +14,11 @@ public class RootObject
     private readonly Dictionary<object, Dictionary<string, RootObject>> attachements = new(ReferenceEqualityComparer.Instance);
     internal int nextId = 0;
 
+    public async Task Save()
+    {
+        await registry.SaveObject(this);
+    }
+
     public void AddSubObject(object obj, int nextId)
     {
         subObjectIds[obj] = nextId;
