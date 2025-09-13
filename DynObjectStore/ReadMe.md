@@ -2,6 +2,16 @@
 
 maybe remove type info from Db-Table instead use the one from json string
 
+# Ideas
+
+Entities (semantic Real-world Objects) can be wrapped to split up big object graphs
+
+this would allow layz loading and change management per Entity
+
+The definition of Entities can be made on class level, this needs to be configured in code or config
+
+https://chatgpt.com/share/68c51374-a86c-8007-8af6-e9f04990ccaa
+
 # Concept
 
 based on Idea of a (Global entity-centric IT Environement)[https://www.notion.so/Global-Entity-Centric-IT-1bd37f05f33a8024bd0aea28f3f3baba]
