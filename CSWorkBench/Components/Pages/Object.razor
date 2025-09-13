@@ -5,7 +5,7 @@
 
 @if (obj != null)
 {
-    <ObjectDetail obj="obj" markModified="markModified"></ObjectDetail>
+    <ObjectDetail obj="obj" OnModify="OnModify"></ObjectDetail>
 }
 
 @code {
@@ -28,8 +28,9 @@
         if (obj == null) return;
     }
 
-    private void markModified()
+    private void OnModify()
     {
-        modified = true;
+        @* modified = true; *@
+        registry.SaveObject(root!);
     }
 }

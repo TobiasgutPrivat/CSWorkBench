@@ -1,6 +1,6 @@
 <div class="mb-3">
-    <BSLabel>@field.Name</BSLabel>
-    @switch (field.Type)
+    <BSLabel>@attr.Name</BSLabel>
+    @switch (attr.Type)
     {
         case Type t when t == typeof(string) || t == typeof(char):
             <BSInput InputType="InputType.Text" @bind-Value="Value"></BSInput>
@@ -20,20 +20,25 @@
             break;
     }
 </div>
+
 @code {
     [Parameter]
-    public required Field field { get; set; }
+    public required object obj { get; set; } // a subobj
 
     [Parameter]
-    public required Action markModified { get; set; }
+    public required AttrInfo attr { get; set; }
+
+    [Parameter]
+    public required Action OnModify { get; set; }
 
     private object? Value
     {
-        get => field.get();
+        get => attr.get(obj);
         set
         {
-            markModified();
-            field.set(value);
+            Console.WriteLine("modified");
+            OnModify();
+            attr.set(obj,value);
         }
     }
 }

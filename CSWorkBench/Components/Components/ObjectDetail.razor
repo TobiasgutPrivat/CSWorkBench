@@ -1,28 +1,23 @@
-@foreach (Field field in fields)
+@foreach (AttrInfo attr in typeInfo.fields)
 {
-    <InlineField field="field" markModified="markModified"></InlineField>
+    <InlineField attr="attr" OnModify="OnModify" obj="obj"></InlineField>
 }
-@foreach (MethodInfo method in methods)
+@foreach (MethodInfo method in typeInfo.methods)
 {
-    <InlineFunction markModified="markModified" method="method" obj="obj"></InlineFunction>
+    <InlineFunction markModified="OnModify" method="method" obj="obj"></InlineFunction>
 }
 
 @code {
     [Parameter]
-    public required object obj { get; set; }
+    public required object obj { get; set; } // a subobj
 
     [Parameter]
-    public required Action markModified { get; set; }
+    public required Action OnModify { get; set; } // marks RootObject
 
-    public List<Field> fields = [];
-    public List<MethodInfo> methods = [];
+    public TypeInf typeInfo { get; set; }
 
     protected override void OnInitialized()
     {
-        // get reflection info
-        Type type = obj.GetType();
-        fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance).Select(f => new Field(f.Name,f.FieldType, () => f.GetValue(obj), v => f.SetValue(obj,v))).ToList();
-        fields.AddRange(type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => new Field(p.Name, p.PropertyType, () => p.GetValue(obj), v => p.SetValue(obj,v))).ToList());
-        methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => !m.IsSpecialName && m.DeclaringType != typeof(object)).ToList();
+        typeInfo = refService.getTypeInfo(obj);
     }
 }

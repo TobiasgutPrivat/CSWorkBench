@@ -21,6 +21,10 @@ var registry = new Registry(conn);
 conn.Open();
 builder.Services.AddSingleton(registry);
 
+// reflection setup
+var reflectionService = new ReflectionService();
+builder.Services.AddSingleton(reflectionService);
+
 // user setup
 UserService userService = new UserService();
 builder.Services.AddSingleton(userService);
