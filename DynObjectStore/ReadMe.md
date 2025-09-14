@@ -12,6 +12,17 @@ The definition of Entities can be made on class level, this needs to be configur
 
 https://chatgpt.com/share/68c51374-a86c-8007-8af6-e9f04990ccaa
 
+## entities
+
+AN entity is in it self independent from others. 
+If an object is part of multiple entities it should be an entity itself.
+
+**Examples**
+
+A School has a teacher, but this teacher is also part of a Family and a citizien of a Country -> Teacher is a Entity itself
+
+A School has a classroom, this classroom cannot be part of something else, would be broken if moved -> not a Entity itself
+
 # Concept
 
 based on Idea of a (Global entity-centric IT Environement)[https://www.notion.so/Global-Entity-Centric-IT-1bd37f05f33a8024bd0aea28f3f3baba]
