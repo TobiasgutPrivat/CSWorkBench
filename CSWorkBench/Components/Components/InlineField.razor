@@ -64,7 +64,7 @@
     {
         if (Value == null) return;
         if (!attr.Type.IsPrimitive && !attr.Type.IsEnum) {
-            Navigation.NavigateTo("/" + root.id + "/" + root.GetSubObjectId(Value));
+            Navigation.NavigateTo("/" + root.id + "/" + root.GetSubObjectId(Value), forceLoad: true);
         }
     }
 
