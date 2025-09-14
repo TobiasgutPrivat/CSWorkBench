@@ -1,18 +1,23 @@
+<form>
 @foreach (AttrInfo attr in typeInfo.fields)
 {
-    <InlineField attr="attr" OnModify="OnModify" obj="obj"></InlineField>
+    <InlineField root="root" attr="attr" OnModify="OnModify" obj="obj"></InlineField>
 }
 @foreach (MethodInfo method in typeInfo.methods)
 {
     <InlineFunction markModified="OnModify" method="method" obj="obj"></InlineFunction>
 }
+</form>
 
 @code {
     [Parameter]
-    public required object obj { get; set; } // a subobj
+    public required RootObject root { get; set; }
 
     [Parameter]
-    public required Action OnModify { get; set; } // marks RootObject
+    public required object obj { get; set; }
+
+    [Parameter]
+    public required Action OnModify { get; set; }
 
     public TypeInf typeInfo { get; set; }
 
