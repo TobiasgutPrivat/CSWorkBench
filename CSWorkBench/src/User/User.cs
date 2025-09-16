@@ -1,3 +1,5 @@
+namespace CSWorkBench;
+
 using System.Text.Json.Serialization;
 
 public class User

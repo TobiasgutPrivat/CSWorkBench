@@ -1,3 +1,4 @@
+namespace CSWorkBench;
 // singleton service
 // TODO store somewhere
 public class UserService

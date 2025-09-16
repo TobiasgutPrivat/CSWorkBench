@@ -14,6 +14,9 @@ namespace DynObjectStore
 
         public async Task Open()
         {
+            string? folderPath = Path.GetDirectoryName(_dbPath);
+            if (folderPath != null && !Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
             bool createNew = !File.Exists(_dbPath);
 
             _connection = new SqliteConnection($"Data Source={_dbPath}");

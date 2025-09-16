@@ -1,3 +1,5 @@
+namespace CSWorkBench;
+
 using Microsoft.AspNetCore.Components;
 
 public class SessionAwareComponent : ComponentBase, IDisposable

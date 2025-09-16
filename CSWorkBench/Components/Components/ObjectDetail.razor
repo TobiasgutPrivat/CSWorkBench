@@ -1,3 +1,8 @@
+@if (typeInfo == null)
+{
+    <p>Loading...</p>
+    return;
+}
 <form>
 @foreach (AttrInfo attr in typeInfo.fields)
 {
@@ -19,7 +24,7 @@
     [Parameter]
     public required Action OnModify { get; set; }
 
-    public TypeInf typeInfo { get; set; }
+    public TypeInf? typeInfo { get; set; }
 
     protected override void OnInitialized()
     {

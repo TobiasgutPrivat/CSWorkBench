@@ -9,7 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\CSGeneralAgent\CSGeneralAgent.csproj" />
     <ProjectReference Include="..\DynObjectStore\DynObjectStore.csproj" />
-    <PackageReference Include="blazorstrap.v5" Version="5.2.104" />
   </ItemGroup>
 
 </Project>

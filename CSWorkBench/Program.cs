@@ -1,4 +1,4 @@
-using BlazorStrap;
+using CSWorkBench;
 using CSWorkBench.Components.Layout;
 using DynObjectStore;
 using Microsoft.JSInterop;
@@ -12,8 +12,6 @@ builder.Configuration.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-
-builder.Services.AddBlazorStrap();
 
 // connection setup
 IDBConnection conn = new SQLiteDBConnection(@"..\data\test.db"); //TODO this is temp

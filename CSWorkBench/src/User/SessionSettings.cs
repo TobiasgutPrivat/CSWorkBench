@@ -1,3 +1,4 @@
+namespace CSWorkBench;
 
 using Microsoft.JSInterop;
 
