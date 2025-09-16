@@ -1,5 +1,5 @@
 <div class="mb-3">
-    <BSLabel>@attr.Name</BSLabel>
+    <label class="form-label">@attr.Name</label>
     @switch (attr.Type)
     {
         case Type t when t == typeof(string) || t == typeof(char):
@@ -16,16 +16,16 @@
             <input class="form-check-input" type="checkbox" checked="@(Value is bool b && b)" @onchange="@(e => SetValue(e.Value is "on"))"></input>
             break;
         case Type t when t == typeof(DateTime):
-            <input class="form-control" type="datetime-local" value="@(Value is DateTime dt ? dt.ToString("yyyy-MM-ddTHH:mm") : null)" @onchange="e => SetValue(DateTime.Parse(e.Value.ToString()!))"></input>
+            <input class="form-control" type="datetime-local" value="@(Value is DateTime dt ? dt.ToString("yyyy-MM-ddTHH:mm") : null)" @onchange="e => SetValue(DateTime.Parse(e.Value.ToString()))"></input>
             break;
         case Type t when t == typeof(DateOnly):
-            <input class="form-control" type="date" value="@(Value is DateOnly d ? d.ToString("yyyy-MM-dd") : null)" @onchange="e => SetValue(DateOnly.Parse(e.Value.ToString()!))"></input>
+            <input class="form-control" type="date" value="@(Value is DateOnly d ? d.ToString("yyyy-MM-dd") : null)" @onchange="e => SetValue(DateOnly.Parse(e.Value.ToString()))"></input>
             break;
         case Type t when t == typeof(TimeOnly):
-            <input class="form-control" type="time" value="@(Value is TimeOnly ti ? ti.ToString("HH:mm") : null)" @onchange="e => SetValue(TimeOnly.Parse(e.Value.ToString()!))"></input>
+            <input class="form-control" type="time" value="@(Value is TimeOnly ti ? ti.ToString("HH:mm") : null)" @onchange="e => SetValue(TimeOnly.Parse(e.Value.ToString()))"></input>
             break;
         case Type t when t.IsEnum:
-            <select class="form-select" @onchange="e => SetValue(Enum.Parse(attr.Type, e.Value.ToString()!))">
+            <select class="form-select" @onchange="e => SetValue(Enum.Parse(attr.Type, e.Value.ToString()))">
                 @foreach (var enumVal in Enum.GetValues(attr.Type))
                 {
                     <option value="@enumVal" selected="@(enumVal.Equals(Value) ? "selected" : null)">@enumVal</option>

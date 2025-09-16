@@ -1,4 +1,4 @@
-<Modal @ref="selectModal" Title="Select an Option">
+<Modal @ref="selectClassModal" Title="Select an Option">
     <BodyTemplate>
         <AutoComplete @bind-Value="typeName"
             TItem="Type"
@@ -10,7 +10,7 @@
 </Modal>
 
 @code {
-    private Modal selectModal = default!;
+    private Modal selectClassModal = default!;
     private TaskCompletionSource<Type?>? tcs;
     private string? typeName;
     
@@ -21,13 +21,13 @@
     private void OnAutoCompleteChanged(Type type)
     {
         tcs?.SetResult(type);
-        selectModal.HideAsync();
+        selectClassModal.HideAsync();
     }
 
     public async Task<Type?> ShowAsync()
     {
         tcs = new TaskCompletionSource<Type?>();
-        await selectModal.ShowAsync();
+        await selectClassModal.ShowAsync();
         return await tcs.Task;
     }
 }

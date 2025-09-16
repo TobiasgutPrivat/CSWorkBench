@@ -1,0 +1,28 @@
+<Modal @ref="selectModal" Title="Select an Option">
+    <BodyTemplate>
+    @* TODO input *@
+    </BodyTemplate>
+    <FooterTemplate>
+    @* TODO run *@
+    </FooterTemplate>
+</Modal>
+
+@code {
+    private Modal selectModal = default!;
+    private TaskCompletionSource<Type?>? tcs;
+    
+
+    private void OnAutoCompleteChanged(Type type)
+    {
+        tcs?.SetResult(type);
+        selectModal.HideAsync();
+    }
+
+    public async Task<Type?> ShowAsync()
+    {
+        tcs = new TaskCompletionSource<Type?>();
+        await selectModal.ShowAsync();
+        return await tcs.Task;
+    }
+}
+

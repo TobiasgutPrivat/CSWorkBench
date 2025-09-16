@@ -70,3 +70,40 @@ when implementing cross browser dragging, this can be used within tabs as well
 I think agent should be seperate from UI (maybe custom Design)
 
 Just handled as a normal object, where you can drag context to (Context maybe as Attachements -> would create dependency on DynStore)
+
+## UI
+
+### Routing
+
+always route to Object View
+
+root:int optional
+
+sub:int optional
+
+invalid -> like not found
+
+### Object View
+
+Not Found -> Object Search
+
+root? -> get object from DB
+
+sub? -> get sub-object from RootObject
+
+object 
+   -> Get Typeinfo from reflectionService
+   -> optional feature: get Settings Global/user
+   -> render
+
+### Object Search
+
+TODO
+
+### New Objects
+
+New -> create empty entry in DB
+
+On Object view if Type empty -> provide Type Selection
+
+On Object view if Object empty -> provide Constructors
