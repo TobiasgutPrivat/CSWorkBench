@@ -1,0 +1,11 @@
+<button Color="Color.Primary" @onclick="newObject">+</button>
+
+<SelectClass @ref="selectClass" />
+
+@code {
+    private SelectClass selectClass = default!;
+
+    private async Task newObject() {
+        Type? type = await selectClass.ShowAsync();
+    }
+}

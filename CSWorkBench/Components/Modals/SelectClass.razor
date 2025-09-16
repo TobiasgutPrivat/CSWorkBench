@@ -1,23 +1,24 @@
 <Modal @ref="selectModal" Title="Select an Option">
-    <select class="selectpicker" data-live-search="true" @onchange="e => SelectType((Type)e.Value!)">
-    @foreach (Type c in classes)
-    {
-        <option data="i" value="@c">@c.Name</option>
-    }
-    </select>
+    <BodyTemplate>
+        <AutoComplete @bind-Value="typeName"
+            TItem="Type"
+            DataProvider="TypeDataProvider"
+            PropertyName="Name"
+            Placeholder="Search a type..."
+            OnChanged="OnAutoCompleteChanged" />
+    </BodyTemplate>
 </Modal>
 
 @code {
     private Modal selectModal = default!;
     private TaskCompletionSource<Type?>? tcs;
-    List<Type> classes = new();
+    private string? typeName;
     
-    void OnInitialize()
-    {
-        classes = refService.getAllTypes();
+    private async Task<AutoCompleteDataProviderResult<Type>> TypeDataProvider(AutoCompleteDataProviderRequest<Type> request) {
+        return await Task.FromResult(request.ApplyTo(refService.getAllTypes()));
     }
 
-    private void SelectType(Type type)
+    private void OnAutoCompleteChanged(Type type)
     {
         tcs?.SetResult(type);
         selectModal.HideAsync();
