@@ -75,17 +75,17 @@ Just handled as a normal object, where you can drag context to (Context maybe as
 
 ### Routing
 
-always route to Object View
+new -> New Object
 
-root:int optional
-
+root:int
 sub:int optional
+   -> Object View
 
 invalid -> like not found
 
-### Object View
-
 Not Found -> Object Search
+
+### Object View
 
 root? -> get object from DB
 no root -> New Object
@@ -95,7 +95,7 @@ sub? -> get sub-object from RootObject
 object 
    -> Get Typeinfo from reflectionService
    -> optional feature: get Settings Global/user
-   -> render
+   -> render Object Form
 
 ### Object Search
 
@@ -105,8 +105,27 @@ TODO
 
 Action: New -> create and route to empty entry in DB
 
-Type empty? -> provide Type Selection
+render Type Selection
 
-Object empty? -> provide Constructors (function), type still changeable
+type selected -> render Constructors (function), type still changeable
 
 object created -> dont render new object component (auto)
+
+### Object Form
+
+typeInfo!
+obj!
+-> render according to info and bind to obj
+
+onModify? -> forward to inputs and methods
+
+### value input
+for writable variables
+
+Type!
+
+value? -> use as start-value and set when changed
+
+onModify? -> call when value changed
+
+render depending on type
