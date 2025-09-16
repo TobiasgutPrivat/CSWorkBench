@@ -11,4 +11,8 @@
     <ProjectReference Include="..\DynObjectStore\DynObjectStore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Blazor.bootstrap" Version="3.4.0" />
+  </ItemGroup>
+
 </Project>

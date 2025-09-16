@@ -1,0 +1,33 @@
+<Modal @ref="selectModal" Title="Select an Option">
+    <select class="selectpicker" data-live-search="true" @onchange="e => SelectType((Type)e.Value!)">
+    @foreach (Type c in classes)
+    {
+        <option data="i" value="@c">@c.Name</option>
+    }
+    </select>
+</Modal>
+
+@code {
+    private Modal selectModal = default!;
+    private TaskCompletionSource<Type?>? tcs;
+    List<Type> classes = new();
+    
+    void OnInitialize()
+    {
+        classes = refService.getAllTypes();
+    }
+
+    private void SelectType(Type type)
+    {
+        tcs?.SetResult(type);
+        selectModal.HideAsync();
+    }
+
+    public async Task<Type?> ShowAsync()
+    {
+        tcs = new TaskCompletionSource<Type?>();
+        await selectModal.ShowAsync();
+        return await tcs.Task;
+    }
+}
+
