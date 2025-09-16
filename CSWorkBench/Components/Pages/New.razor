@@ -1,0 +1,20 @@
+
+<AutoComplete @bind-Value="typeName"
+    TItem="Type"
+    DataProvider="TypeDataProvider"
+    PropertyName="Name"
+    Placeholder="Search a type..." />
+
+@if (typeName != null){
+    @* TODO provide COnstructors *@
+}
+
+@code{
+    private Modal selectClassModal = default!;
+    private TaskCompletionSource<Type?>? tcs;
+    private string? typeName;
+
+    private async Task<AutoCompleteDataProviderResult<Type>> TypeDataProvider(AutoCompleteDataProviderRequest<Type> request) {
+        return await Task.FromResult(request.ApplyTo(refService.getAllTypes()));
+    }
+}
