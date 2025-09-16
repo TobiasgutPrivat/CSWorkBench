@@ -88,6 +88,7 @@ invalid -> like not found
 Not Found -> Object Search
 
 root? -> get object from DB
+no root -> New Object
 
 sub? -> get sub-object from RootObject
 
@@ -100,10 +101,12 @@ object
 
 TODO
 
-### New Objects
+### New Object
 
-New -> create empty entry in DB
+Action: New -> create and route to empty entry in DB
 
-On Object view if Type empty -> provide Type Selection
+Type empty? -> provide Type Selection
 
-On Object view if Object empty -> provide Constructors
+Object empty? -> provide Constructors (function), type still changeable
+
+object created -> dont render new object component (auto)
