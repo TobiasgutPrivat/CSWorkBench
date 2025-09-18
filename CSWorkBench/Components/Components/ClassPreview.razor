@@ -1,8 +1,19 @@
-@Type.Name
+@using System.Runtime.CompilerServices
+<span @onclick="_OnClick">@Type.Name</span>
 @* possibly add icon, ... *@
-@* onClick nav to Class view *@
 
 @code {
     [Parameter]
     public required Type Type { get; set; }
+    [Parameter]
+    public Action? OnClick { get; set; }
+
+    private void _OnClick()
+    {
+        if (OnClick != null) {
+            OnClick.Invoke();
+        } else {
+            //TODO open class view
+        }
+    }
 }

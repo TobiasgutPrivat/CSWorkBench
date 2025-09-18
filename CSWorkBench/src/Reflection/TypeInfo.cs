@@ -5,6 +5,7 @@ public class TypeInf
     public Type Type;
     public List<AttrInfo> fields = [];
     public List<MethodInfo> methods = [];
+    public List<ConstructorInfo> constructors;
 
     public TypeInf(Type type)
     {
@@ -12,5 +13,6 @@ public class TypeInf
         fields.AddRange(type.GetFields(BindingFlags.Public | BindingFlags.Instance).Select(f => new AttrInfo(f)));
         fields.AddRange(type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => new AttrInfo(p)));
         methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => !m.IsSpecialName && m.DeclaringType != typeof(object)).ToList();
+        constructors = Type.GetConstructors(BindingFlags.Public | BindingFlags.Instance).ToList();
     }
 }

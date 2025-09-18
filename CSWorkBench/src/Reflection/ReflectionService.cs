@@ -22,7 +22,7 @@ class ReflectionService
             return allTypes.ToList();
         Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
         foreach (Assembly assembly in assemblies)
-            allTypes.UnionWith(assembly.GetTypes());
+            allTypes.UnionWith(assembly.GetTypes().Where(t => t.IsPublic && !t.IsInterface));
         return allTypes.ToList();
     }
 }

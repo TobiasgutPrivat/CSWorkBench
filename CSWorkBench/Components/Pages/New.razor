@@ -1,13 +1,27 @@
+@page "/new"
+
 @using System.Threading.Tasks
 @if (selectedType == null){
-    <input class="form-control" type="text" @bind-value="filter"></input>
+    <input class="form-control" type="text" @bind-value="filter" @bind-value:event="oninput"></input>
 
-    foreach (Type type in refService.getAllTypes().Where(t => filter == null || t.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)).OrderBy(t => t.Name).Take(10))
-    {
-        <ClassPreview Type="type" @onclick="() => selectedType = type"></ClassPreview>
-    }
+    <ul class="list-group">
+        @foreach (Type type in refService.getAllTypes().Where(t => filter == null || t.Name.Contains(filter, StringComparison.OrdinalIgnoreCase))
+            .Where(t => refService.getTypeInfo(t).constructors.Any())
+            .OrderBy(t => t.Name)
+            .Take(10))
+        {
+            <li @onclick="e => selectedType = type" style="cursor:pointer;">
+                <ClassPreview Type="type"></ClassPreview>
+            </li>
+        }
+    </ul>
 } else {
-    foreach (ConstructorInfo ctor in selectedType.GetConstructors())
+    <ClassPreview Type="selectedType" OnClick="() => {selectedType = null; StateHasChanged();}"></ClassPreview>
+    TypeInf typeInfo = refService.getTypeInfo(selectedType);
+    if (typeInfo.constructors.Count == 0) {
+        <p>No constructor found!</p>
+    }
+    foreach (ConstructorInfo ctor in typeInfo.constructors)
     {
         <MethodForm method="ctor" callBack="onCreate"></MethodForm>
     }
@@ -17,8 +31,6 @@
     [Parameter]
     public Action<object>? onObjectCreated { get; set; }
 
-    private Modal selectClassModal = default!;
-    private TaskCompletionSource<Type?>? tcs;
     private string? filter;
     private Type? selectedType;
 
