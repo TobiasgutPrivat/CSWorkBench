@@ -1,0 +1,51 @@
+@switch (type)
+{
+    case Type t when t == typeof(string) || t == typeof(char):
+        <input class="form-control" type="text" @bind-value="Value"></input>
+        break;
+    case Type t when t == typeof(int) || t == typeof(short) || t == typeof(long) || t == typeof(ushort) || t == typeof(uint)
+|| t == typeof(ulong):
+        <input class="form-control" type="number" @bind-value="Value"></input>
+        break;
+    case Type t when t == typeof(float) || t == typeof(double) || t == typeof(decimal):
+        <input class="form-control" type="number" step="any" @bind-value="Value"></input>
+        break;
+    case Type t when t == typeof(bool):
+        <input class="form-check-input" type="checkbox" checked="@(Value is bool b && b)" @onchange="@(e => Value = (e.Value is "on"))"></input>
+        break;
+    case Type t when t == typeof(DateTime):
+        <input class="form-control" type="datetime-local" value="@(Value is DateTime dt ? dt.ToString("yyyy-MM-ddTHH:mm") : null)" @onchange="e => Value = DateTime.Parse(e.Value.ToString())"></input>
+        break;
+    case Type t when t == typeof(DateOnly):
+        <input class="form-control" type="date" value="@(Value is DateOnly d ? d.ToString("yyyy-MM-dd") : null)" @onchange="e => Value = DateOnly.Parse(e.Value.ToString())"></input>
+        break;
+    case Type t when t == typeof(TimeOnly):
+        <input class="form-control" type="time" value="@(Value is TimeOnly ti ? ti.ToString("HH:mm") : null)" @onchange="e => Value = TimeOnly.Parse(e.Value.ToString())"></input>
+        break;
+    case Type t when t.IsEnum:
+        <select class="form-select" @onchange="e => Value = Enum.Parse(type, e.Value.ToString())">
+            @foreach (var enumVal in Enum.GetValues(type))
+            {
+                <option value="@enumVal" selected="@(enumVal.Equals(Value) ? "selected" : null)">@enumVal</option>
+            }
+        </select>
+        break;
+    case Type t when !t.IsPrimitive && !t.IsEnum:
+        <p>TODO</p>
+        break;
+    default:
+        <p>unknown</p>
+        break;
+}
+
+@code {
+    [Parameter]
+    public required Type type { get; set; }
+
+    [Parameter]
+    public object? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<object> ValueChanged { get; set; }
+}
+

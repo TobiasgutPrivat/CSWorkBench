@@ -1,50 +1,6 @@
 <div class="mb-3">
     <label class="form-label">@attr.Name</label>
-    @switch (attr.Type)
-    {
-        case Type t when t == typeof(string) || t == typeof(char):
-            <input class="form-control" type="text" value="@Value" @onchange="e => SetValue(e.Value)"></input>
-            break;
-        case Type t when t == typeof(int) || t == typeof(short) || t == typeof(long) || t == typeof(ushort) || t == typeof(uint)
-    || t == typeof(ulong):
-            <input class="form-control" type="number" value="@Value" @onchange="e => SetValue(Convert.ChangeType(e.Value, attr.Type))"></input>
-            break;
-        case Type t when t == typeof(float) || t == typeof(double) || t == typeof(decimal):
-            <input class="form-control" type="number" step="any" value="@Value" @onchange="e => SetValue(Convert.ChangeType(e.Value, attr.Type))"></input>
-            break;
-        case Type t when t == typeof(bool):
-            <input class="form-check-input" type="checkbox" checked="@(Value is bool b && b)" @onchange="@(e => SetValue(e.Value is "on"))"></input>
-            break;
-        case Type t when t == typeof(DateTime):
-            <input class="form-control" type="datetime-local" value="@(Value is DateTime dt ? dt.ToString("yyyy-MM-ddTHH:mm") : null)" @onchange="e => SetValue(DateTime.Parse(e.Value.ToString()))"></input>
-            break;
-        case Type t when t == typeof(DateOnly):
-            <input class="form-control" type="date" value="@(Value is DateOnly d ? d.ToString("yyyy-MM-dd") : null)" @onchange="e => SetValue(DateOnly.Parse(e.Value.ToString()))"></input>
-            break;
-        case Type t when t == typeof(TimeOnly):
-            <input class="form-control" type="time" value="@(Value is TimeOnly ti ? ti.ToString("HH:mm") : null)" @onchange="e => SetValue(TimeOnly.Parse(e.Value.ToString()))"></input>
-            break;
-        case Type t when t.IsEnum:
-            <select class="form-select" @onchange="e => SetValue(Enum.Parse(attr.Type, e.Value.ToString()))">
-                @foreach (var enumVal in Enum.GetValues(attr.Type))
-                {
-                    <option value="@enumVal" selected="@(enumVal.Equals(Value) ? "selected" : null)">@enumVal</option>
-                }
-            </select>
-            break;
-        case Type t when !t.IsPrimitive && !t.IsEnum:
-            <div class="d-flex justify-content-center">
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <button class="btn btn-outline-secondary" type="button" @onclick="NavigateToDetail"><i class="bi bi-arrow-right-circle"></i></button>
-                    </div>
-                </div>
-            </div>
-            break;
-        default:
-            <p>unknown</p>
-            break;
-    }
+    <ValueInput type=attr.Type @bind-Value="Value"></ValueInput>
 </div>
 
 @code {

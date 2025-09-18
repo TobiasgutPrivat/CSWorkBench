@@ -1,18 +1,28 @@
-
-<AutoComplete @bind-Value="typeName"
+<AutoComplete ValueChanged="typeName"
     TItem="Type"
     DataProvider="TypeDataProvider"
-    PropertyName="Name"
+    PropertyName="FullName"
     Placeholder="Search a type..." />
 
+
+
 @if (typeName != null){
-    @* TODO provide COnstructors *@
+    var type = refService.getAllTypes().FirstOrDefault(t => t.FullName == typeName);
+    if (type != null) {
+        <p>invalid Type</p>
+    } else {
+        foreach (ConstructorInfo ctor in type.GetConstructors())
+        {
+            <MethodForm method="ConstructorInfo" method="ctor" obj="null"></MethodForm>
+        }
+    }
 }
 
 @code{
     private Modal selectClassModal = default!;
     private TaskCompletionSource<Type?>? tcs;
     private string? typeName;
+    private Type? selectedType;
 
     private async Task<AutoCompleteDataProviderResult<Type>> TypeDataProvider(AutoCompleteDataProviderRequest<Type> request) {
         return await Task.FromResult(request.ApplyTo(refService.getAllTypes()));

@@ -6,11 +6,14 @@
 <form>
 @foreach (AttrInfo attr in typeInfo.fields)
 {
-    <InlineField root="root" attr="attr" OnModify="OnModify" obj="obj"></InlineField>
+    <div class="mb-3">
+        <label class="form-label">@attr.Name</label>
+        <ValueInput root="root" attr="attr" OnModify="OnModify" obj="obj"></ValueInput>
+    </div>
 }
 @foreach (MethodInfo method in typeInfo.methods)
 {
-    <InlineFunction markModified="OnModify" method="method" obj="obj"></InlineFunction>
+    <MethodForm markModified="OnModify" method="method" obj="obj"></MethodForm>
 }
 </form>
 
