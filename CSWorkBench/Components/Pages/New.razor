@@ -1,30 +1,33 @@
-<AutoComplete ValueChanged="typeName"
-    TItem="Type"
-    DataProvider="TypeDataProvider"
-    PropertyName="FullName"
-    Placeholder="Search a type..." />
+@using System.Threading.Tasks
+@if (selectedType == null){
+    <input class="form-control" type="text" @bind-value="filter"></input>
 
-
-
-@if (typeName != null){
-    var type = refService.getAllTypes().FirstOrDefault(t => t.FullName == typeName);
-    if (type != null) {
-        <p>invalid Type</p>
-    } else {
-        foreach (ConstructorInfo ctor in type.GetConstructors())
-        {
-            <MethodForm method="ConstructorInfo" method="ctor" obj="null"></MethodForm>
-        }
+    foreach (Type type in refService.getAllTypes().Where(t => filter == null || t.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)).OrderBy(t => t.Name).Take(10))
+    {
+        <ClassPreview Type="type" @onclick="() => selectedType = type"></ClassPreview>
+    }
+} else {
+    foreach (ConstructorInfo ctor in selectedType.GetConstructors())
+    {
+        <MethodForm method="ctor" callBack="onCreate"></MethodForm>
     }
 }
 
 @code{
+    [Parameter]
+    public Action<object>? onObjectCreated { get; set; }
+
     private Modal selectClassModal = default!;
     private TaskCompletionSource<Type?>? tcs;
-    private string? typeName;
+    private string? filter;
     private Type? selectedType;
 
-    private async Task<AutoCompleteDataProviderResult<Type>> TypeDataProvider(AutoCompleteDataProviderRequest<Type> request) {
-        return await Task.FromResult(request.ApplyTo(refService.getAllTypes()));
+    private async Task onCreate(object obj) {
+        if (onObjectCreated != null) {
+            onObjectCreated(obj);
+        } else {
+            RootObject root = await registry.SaveObject(obj);
+            Navigation.NavigateTo("/" + root.id, forceLoad: true);
+        }
     }
 }

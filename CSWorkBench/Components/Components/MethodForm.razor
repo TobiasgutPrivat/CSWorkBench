@@ -14,24 +14,21 @@
     public required object obj { get; set; }
 
     [Parameter]
-    public required MethodInfo method { get; set; }
+    public required MethodBase method { get; set; }
 
     [Parameter]
-    public Func<object?>? callBack { get; set; }
+    public Func<object?,Task?>? callBack { get; set; }
 
     public Dictionary<ParameterInfo, object?> parameterValues = new Dictionary<ParameterInfo, object?>();
 
     private async Task InvokeMethod()
     {
-        var parameters = method.GetParameters().Select(p => parameterValues.ContainsKey(p) ? parameterValues[p] : Type.Missing).ToArray();
-        var result = method.Invoke(obj, parameters);
+        object?[]? parameters = method.GetParameters().Select(p => parameterValues.ContainsKey(p) ? parameterValues[p] : Type.Missing).ToArray();
+        object? result = method.Invoke(obj, parameters);
         if (result is Task task)
         {
             await task;
         }
-        if (markModified != null) {
-            markModified();
-        }
-
+        callBack?.Invoke(result);
     }
 }
